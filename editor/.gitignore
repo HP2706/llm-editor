@@ -8,6 +8,7 @@
 
 # testing
 /coverage
+*test.py
 
 # next.js
 /.next/
@@ -34,3 +35,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+#python stuff
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*cpython
+```
