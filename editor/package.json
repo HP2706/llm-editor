@@ -15,12 +15,15 @@
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.39.3",
+    "@tabler/icons-react": "^2.47.0",
     "clsx": "^2.1.0",
     "concurrently": "^8.2.2",
     "framer-motion": "^11.0.3",
     "next": "14.1.0",
     "react": "^18",
     "react-dom": "^18",
+    "react-element-to-jsx-string": "^15.0.0",
+    "sonner": "^1.4.0",
     "tailwind-merge": "^2.2.1"
   },
   "devDependencies": {

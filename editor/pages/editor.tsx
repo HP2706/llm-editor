@@ -1,8 +1,12 @@
+'client'
+
+import { useEffect, useState } from "react";
+
 import { BackgroundGradientAnimation } from "@/app/components/ui/background-gradient-animation";
 import React from "react";
 import {UploadDoc} from '@/app/components/uploadDoc';
+import { useAuth } from '@/app/components/authContext';
 import { useRouter } from "next/router";
-import { useState } from "react";
 import {useTheme} from '@/app/components/ui/theme-context'; // adjust the path as necessary
 
 export default function Editor() {
@@ -15,6 +19,15 @@ export default function Editor() {
         titleColor, setTitleColor,
         hoverColor, setHoverColor
     } = useTheme(); 
+    
+    /* const { authState, setAuthState } = useAuth();
+    const { user, session } = authState;
+    
+    useEffect(() => {
+        if (!user) {
+            router.push('/authPage');
+        }
+    }, []); */
 
     const UploadFile = async () => {
         console.log('calling API');

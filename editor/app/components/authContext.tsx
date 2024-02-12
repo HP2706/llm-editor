@@ -1,42 +1,38 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { ReactNode, createContext, useContext, useEffect, useState } from 'react';
+import { Session, User } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabaseClient';
 
-interface AuthContextType {
-  user: any; // Consider using a more specific type here
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
+interface AuthState {
+  user: User | null;
+  session: Session | null;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthStateContext = createContext<{
+  authState: AuthState;
+  setAuthState: React.Dispatch<React.SetStateAction<AuthState>>;
+}>({
+  authState: { user: null, session: null },
+  setAuthState: () => {},
+});
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<any>(null); // Consider using a more specific type here
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const session = supabase.auth.session();
-    setUser(session?.user || null);
-    setLoading(false);
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
-
-    return () => {
-      listener.unsubscribe();
-    };
-  }, []);
-
-  const value = {
-    user,
-    loading,
-    signIn: (email : string, password : string) : => supabase.auth.signIn({ email, password }),
-    signOut: () => supabase.auth.signOut(),
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const [authState, setAuthState] = useState<AuthState>({ user: null, session: null });
+  
+    useEffect(() => {
+      const sessionSubscription = supabase.auth.onAuthStateChange((_event, session) => {
+          setAuthState({ user: session?.user ?? null, session });
+      });
+  
+      return () => {
+          sessionSubscription.data.subscription.unsubscribe();
+      };
+    }, []);
+  
+    return (
+      <AuthStateContext.Provider value={{ authState, setAuthState }}>
+        {children}
+      </AuthStateContext.Provider>
+    );
   };
-
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => useContext(AuthStateContext);

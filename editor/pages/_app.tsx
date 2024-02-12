@@ -1,13 +1,17 @@
 import { AppProps } from 'next/app';
+import { AuthProvider } from '@/app/components/authContext';
 import Layout from "@/app/layout"
 import { ThemeProvider } from '@/app/components/ui/theme-context';
+
 function MyApp({ Component , pageProps } : AppProps ) {
   return (
-    <Layout>
-      <ThemeProvider>
-          <Component {...pageProps} />
-      </ThemeProvider>
-    </Layout>
+    <AuthProvider>
+      <Layout>
+        <ThemeProvider>
+            <Component {...pageProps} />
+        </ThemeProvider>
+      </Layout>
+    </AuthProvider>
   );
 }
 
