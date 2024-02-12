@@ -5,3 +5,6 @@ instructor==0.4.8
 tiktoken
 docx2txt
 python-multipart
+supabase
+jwt
+bcrypt
