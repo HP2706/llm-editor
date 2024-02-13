@@ -3,8 +3,11 @@ uvicorn[standard]==0.23.2
 openai==1.10.0
 instructor==0.4.8
 tiktoken
-docx2txt
+python-docx
 python-multipart
 supabase
 jwt
 bcrypt
+requests
+numpy
+matplotlib
