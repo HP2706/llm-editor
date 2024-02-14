@@ -17,7 +17,7 @@ from .llm import async_make_edits, make_edits # type: ignore
 from .DocProcessing import Process_file # type: ignore
 #from .schemas import User, AuthenticationResponse # type: ignore
 #from .auth import supabase, JWTBearer
-from .dataModels import Document, LogProb
+from .dataModels import Document, TokenProb
 from .computeLogProbs import Model
 
 
@@ -131,7 +131,7 @@ async def editDoc1(doc: Document, useAsync : bool) -> Response: # ignoring type:
         return e
 
 @app.post('/logprobs')
-async def getLogProbs(file: UploadFile = File(...)) -> List[LogProb]:
+async def getLogProbs(file: UploadFile = File(...)) -> List[TokenProb]:
     '''This function takes a document and returns a list of proposed edits'''
     try:
         Doc = await app.preprocess_file(file)

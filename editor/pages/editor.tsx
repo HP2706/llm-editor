@@ -1,17 +1,23 @@
 'client'
 
+import '@/app/styles/globals.css';
+
+import { BasicButton, BorderMagicButton, TailWindConnectButton } from '@/app/components/ui/buttons';
 import { useEffect, useState } from "react";
 
 import { BackgroundGradientAnimation } from "@/app/components/ui/background-gradient-animation";
+import {FileUpload} from '@/app/components/fileUpload';
+import { MarkdownEditor } from '@/app/components/markdowneditor';
 import React from "react";
-import {UploadDoc} from '@/app/components/uploadDoc';
 import { useAuth } from '@/app/components/authContext';
 import { useRouter } from "next/router";
 import {useTheme} from '@/app/components/ui/theme-context'; // adjust the path as necessary
 
 export default function Editor() {
-    const [File, setFile] = useState<File | null>(null);
+    const [Files, setFiles] = useState<File[] | null>(null);
+    const [Markdown, setMarkdown] = useState<string | null>('');
     const router = useRouter();
+    
     const { 
         color, setColor, 
         textColor, setTextColor, 
@@ -20,27 +26,30 @@ export default function Editor() {
         hoverColor, setHoverColor
     } = useTheme(); 
     
-    /* const { authState, setAuthState } = useAuth();
+    const { authState, setAuthState } = useAuth();
     const { user, session } = authState;
     
     useEffect(() => {
         if (!user) {
+            //think about how this can be done more elegantly, warning user for instance
             router.push('/authPage');
         }
-    }, []); */
+    }, []);
 
-    const UploadFile = async () => {
+    const sendFile = async (num : number) => {
         console.log('calling API');
-        if (!File) {
+        if (!Files) {
             console.log('no file, select a file first');
+            // make popup error message, fading
             return;
         }
+        
         const host = process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000';
         const endpoint = `${host}/api/editDoc`;
         console.log(endpoint);
 
         const formData = new FormData();
-        formData.append("file", File);
+        formData.append("file", Files[num]);
 
         const response = await fetch(endpoint, {
             method: "POST",
@@ -53,18 +62,27 @@ export default function Editor() {
         }
         const data = await response.json();
         console.log(data);
+        return (
+            <MarkdownEditor markdown={data} setMarkdown={setMarkdown}></MarkdownEditor>
+            )
         }
 
     return (
         <BackgroundGradientAnimation>
-          <div className="absolute z-50 inset-0 flex items-center justify-center text-white font-bold px-4 pointer-events-none text-3xl text-center md:text-4xl lg:text-7xl">
-            <p className="bg-clip-text text-transparent drop-shadow-2xl bg-gradient-to-b from-white/80 to-white/20">
-              Gradients X Animations
+          <div className="custom-div">
+            <p className="custom-paragraph">
+                
             </p>
-            <UploadDoc file={File} setFile={setFile}></UploadDoc>
+            
             <h3>
-                <button onClick={UploadFile}>Call API</button>
+                <FileUpload label={"upload your file here"} onFileChange={setFiles}></FileUpload>
             </h3> 
+            <BasicButton 
+                pos={[50, 50]} 
+                name={"call api"} 
+                className={"bg-clip-text text-transparent drop-shadow-2xl bg-gradient-to-b from-white/80 to-white/20"}
+                func={(num : number) => sendFile(num)}> {/* this be done better */}
+            </BasicButton>
           </div>
         </BackgroundGradientAnimation>
     );

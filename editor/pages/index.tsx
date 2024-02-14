@@ -21,12 +21,18 @@ export default function HomePage() {
         <p className="bg-clip-text text-transparent drop-shadow-2xl bg-gradient-to-b from-white/80 to-white/20">
           Let Ai edit your writing
         </p> 
-         {/*  <BasicButton
+          <BasicButton
             pos={[50, 1550]}
             name={"Authenticate"}
             className={"bg-clip-text text-transparent drop-shadow-2xl bg-gradient-to-b from-white/80 to-white/20"} 
             func={() => navigateToAnotherPage('/authPage')} 
-          /> */}
+          />
+          <BasicButton
+            pos={[50, 50]}
+            name={"Try it out"}
+            className={"bg-clip-text text-transparent drop-shadow-2xl bg-gradient-to-b from-white/80 to-white/20"} 
+            func={() => navigateToAnotherPage('/editor')} 
+          />
       </div>
     </BackgroundGradientAnimation>
   );

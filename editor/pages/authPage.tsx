@@ -15,17 +15,17 @@ export default function AuthPage() {
         router.push(url);
     }; 
 
-    /* const { authState, setAuthState } = useAuth();
+    const { authState, setAuthState } = useAuth();
     const { user, session } = authState;
 
     useEffect(() => {
         console.log('user', user);
         console.log('session', session);
         if (user && session) {
-            navigateToAnotherPage('/index'); 
+            navigateToAnotherPage('/'); 
             // if the user is already authenticated, redirect to the index page
         }
-    }, [user, session]); */
+    }, [user, session]);
 
     return (
         <BackgroundGradientAnimation>
@@ -35,3 +35,4 @@ export default function AuthPage() {
         </BackgroundGradientAnimation>
     )
 }
+

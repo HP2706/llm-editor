@@ -1,9 +1,11 @@
 from multiprocessing import cpu_count
-from .dataModels import LogProb, Document
+from .dataModels import TokenProb, Document
 from typing import List, Union
 from transformers import AutoTokenizer
 import matplotlib.pyplot as plt
 import asyncio
+
+#DEPRECATED
 
 def getDifference(text : str, text2 : str) -> str:
     '''gets the difference between two texts'''
@@ -45,11 +47,11 @@ class Model:
         return batched_token_chunks, batched_next_tokens
 
     
-    async def compute_logprobs(self, text : str) -> LogProb:
+    async def compute_logprobs(self, text : str) -> TokenProb:
         '''call modal app to get the logprobs'''
         #TODO call modal api....
     
-    async def gather_logprobs(self, tokens : List[str]) -> List[LogProb]:
+    async def gather_logprobs(self, tokens : List[str]) -> List[TokenProb]:
         '''gets the logprobs for each word that is converted to a token in the list
         #TODO this is not fully tested yet
         '''
@@ -64,12 +66,12 @@ class Model:
         #now get colors
         return logprobs
 
-    def getColor(self, logprobs: LogProb) -> LogProb:
+    def getColor(self, logprobs: TokenProb) -> TokenProb:
         '''returns the text with the logprobs colored'''
         color = self.cmap(logprobs.logprob)
-        return LogProb(token=logprobs.token, logprob=logprobs.logprob, color=color)
+        return TokenProb(token=logprobs.token, logprob=logprobs.logprob, color=color)
     
-    async def getLogProbs(self, document : Document, n_cores : int = cpu_count()) -> List[LogProb]:
+    async def getLogProbs(self, document : Document, n_cores : int = cpu_count()) -> List[TokenProb]:
         '''gets the logprobs for the document'''
         chunks = self.chunk_text(document, n_cores)
         logprobs = await self.gather_logprobs(chunks)
