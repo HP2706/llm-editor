@@ -1,73 +1,62 @@
 import '@/app/styles/FileUpload.css'; // Assuming you have a separate CSS file for styles
 
 // FileUpload.tsx
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+
+import {BasicButton} from '@/app/components/ui/buttons';
 
 interface FileUploadProps {
   label: string;
-  accept?: string;
+  accept?: string[];
   multiple?: boolean;
   maxFileSizeInBytes?: number;
-  onFileChange: (files: File[]) => void; // we give 
+  add_files: (files: File[]) => void; // we give as input the setter function
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
   label,
-  accept = '.md', // try .md, .docx, .txt  perhaps not correct
-  multiple = false,
+  accept = ['.md', '.docx', '.txt'], // try .md, .docx, .txt  perhaps not correct
+  multiple = true,
   maxFileSizeInBytes =  500000,
-  onFileChange,
+  add_files,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('handleFileSelect')
     if (event.target.files) {
-      const files = Array.from(event.target.files);
-      setSelectedFiles(files);
-      onFileChange(files);
+      const file = Array.from(event.target.files);
+      add_files(file);
     }
   };
 
   const handleButtonClick = () => {
+    console.log('handleButtonClick')
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
 
-  const handleFileRemove = (index: number) => {
-    const newFiles = selectedFiles.filter((_, i) => i !== index);
-    setSelectedFiles(newFiles);
-    onFileChange(newFiles);
-  };
+
 
   return (
-    <div className="file-upload">
-      <label htmlFor="file-upload" className="custom-file-upload">
-        <i className="fa fa-cloud-upload"></i> {label}
-      </label>
+    <div className="file-upload"> 
+      <BasicButton
+        pos={[50, 50]}
+        name={label}
+        className={"custom-text-gradient"} 
+        func={() => handleButtonClick()}
+        style={{ fontSize: '1rem'}}
+      />
       <input
         id="file-upload"
         type="file"
         ref={fileInputRef}
         style={{ display: 'none' }}
-        accept={accept}
+        accept={accept.join(',')} // Join the accept array to a string
         multiple={multiple}
-        onChange={handleFileSelect}
+        onChange={(event) => handleFileSelect(event)}
       />
-      <div className="file-preview">
-        {selectedFiles.map((file, index) => (
-          <div key={file.name} className="file-item">
-            <span>{file.name}</span>
-            <button onClick={() => handleFileRemove(index)}>
-              <i className="fa fa-remove"></i>
-            </button>
-          </div>
-        ))}
-      </div>
-      <button onClick={handleButtonClick} className="upload-btn">
-        Upload Files
-      </button>
     </div>
   );
 };

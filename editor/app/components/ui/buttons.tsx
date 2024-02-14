@@ -53,12 +53,12 @@ export const TailWindConnectButton = ({pos, name, className, func} : any) : Reac
     );
 }
 
-export const BasicButton = ({pos, name, className, func} : any)  : React.JSX.Element=> {
+export const BasicButton = ({pos, name, className, func, style} : any)  : React.JSX.Element=> {
     
     return (
         <ButtonsCard pos={pos} className={`${className} pointer-events-auto`} key={null} onClick={func}>
             <div className="bg-transparent visible">
-                <p style={{ fontSize: '1rem' }} className="bg-clip-text text-transparent drop-shadow-2xl bg-gradient-to-b from-white/80 to-white/20">
+                <p style={style} className="bg-clip-text text-transparent drop-shadow-2xl bg-gradient-to-b from-white/80 to-white/20">
                     {name}
                 </p>
             </div>

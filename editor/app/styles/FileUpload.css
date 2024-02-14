@@ -8,13 +8,13 @@
     padding:  10px;
     cursor: pointer;
     color: white;
-    background-color: #4CAF50;
+    background-color: #bed2bf;
     border: none;
     border-radius:  4px;
   }
   
   .custom-file-upload:hover {
-    background-color: #45a049;
+    background-color: #78967a;
   }
   
   .file-preview {

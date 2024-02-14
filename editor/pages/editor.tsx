@@ -8,15 +8,26 @@ import { useEffect, useState } from "react";
 import { BackgroundGradientAnimation } from "@/app/components/ui/background-gradient-animation";
 import {FileUpload} from '@/app/components/fileUpload';
 import { MarkdownEditor } from '@/app/components/markdowneditor';
+import {MultiFileDisplay} from '@/app/components/ui/fileDisplay';
 import React from "react";
 import { useAuth } from '@/app/components/authContext';
 import { useRouter } from "next/router";
 import {useTheme} from '@/app/components/ui/theme-context'; // adjust the path as necessary
 
 export default function Editor() {
-    const [Files, setFiles] = useState<File[] | null>(null);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [Markdown, setMarkdown] = useState<string | null>('');
     const router = useRouter();
+
+    
+
+    const appendFiles = (files: File[]) => {
+        setSelectedFiles([...selectedFiles, ...files]);
+    }
+
+    useEffect(() => {
+        console.log('selectedFiles', selectedFiles)
+    }, [selectedFiles]);
     
     const { 
         color, setColor, 
@@ -38,7 +49,7 @@ export default function Editor() {
 
     const sendFile = async (num : number) => {
         console.log('calling API');
-        if (!Files) {
+        if (!selectedFiles) {
             console.log('no file, select a file first');
             // make popup error message, fading
             return;
@@ -49,7 +60,7 @@ export default function Editor() {
         console.log(endpoint);
 
         const formData = new FormData();
-        formData.append("file", Files[num]);
+        formData.append("file", selectedFiles[num]);
 
         const response = await fetch(endpoint, {
             method: "POST",
@@ -70,19 +81,17 @@ export default function Editor() {
     return (
         <BackgroundGradientAnimation>
           <div className="custom-div">
-            <p className="custom-paragraph">
-                
-            </p>
-            
             <h3>
-                <FileUpload label={"upload your file here"} onFileChange={setFiles}></FileUpload>
+                <FileUpload label={"upload your file here"} add_files={appendFiles}></FileUpload>
             </h3> 
             <BasicButton 
                 pos={[50, 50]} 
                 name={"call api"} 
-                className={"bg-clip-text text-transparent drop-shadow-2xl bg-gradient-to-b from-white/80 to-white/20"}
+                className={"custom-text-gradient"}
                 func={(num : number) => sendFile(num)}> {/* this be done better */}
+                style={{ fontSize: '1rem' }}
             </BasicButton>
+            <MultiFileDisplay upperRight={[4000, 1000]} lowerLeft={[3800,700]} selectedFiles={selectedFiles}></MultiFileDisplay>
           </div>
         </BackgroundGradientAnimation>
     );
