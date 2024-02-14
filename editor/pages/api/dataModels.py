@@ -5,7 +5,7 @@ from typing import Iterable, List, Type, Optional, Tuple
 
 # internal models
 class Metadata(BaseModel):
-    title: str = Field(..., description="The title of the document")
+    title: Optional[str] = Field(None, description="The title of the document")
     n_tokens: int = Field(..., description="The number of tokens in the document")
     n_words : Optional[int] = Field(None, description="The number of words in the document")
 
@@ -33,9 +33,13 @@ def ModelEditFactory(textData: str) -> Type[BaseModel]:
 
 # for getting logprobs
 
-class LogProb(BaseModel):
+class TokenProb(BaseModel):
     token : str = Field(..., description="The token")
-    logprob : float = Field(..., description="The logprob of the token")
+    prob : float = Field(..., description="the probability of the token")
     color : Optional[Tuple[float, float, float, float]] = Field(None, description="""
         The color of the token, the more green the more likely the model finds the token to be.
     """)
+
+class Word(BaseModel):
+    string : str = Field(..., description="The word")
+    pos : int = Field(..., description="The position of the word in sequence") 

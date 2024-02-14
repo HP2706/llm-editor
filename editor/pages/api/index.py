@@ -4,8 +4,6 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi import File, UploadFile, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Any, Optional, Iterable, Type, Union
-import os 
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import json
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -13,8 +11,6 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 import json
-from io import BytesIO
-from starlette.types import ASGIApp, Receive, Scope, Send
 
 
 from .llm import async_make_edits, make_edits # type: ignore
