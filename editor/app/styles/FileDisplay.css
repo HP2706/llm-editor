@@ -2,76 +2,90 @@
 @tailwind components;
 @tailwind utilities;
 
-
 .file-display-box {
     /* ... existing styles ... */
-    display : flex;
+    display: flex;
+    flex-direction: column; /* Stack icon and title vertically */
     align-items: center;
-    justify-content: start;
-    margin: 1px; /* Add margin to prevent overlap */
-    position: relative; /* Needed for absolute positioning of pseudo-element */
-    border-radius: 15px; /* Rounded corners */
-    overflow: hidden; /* Ensures the content respects border-radius */
-    background-color: transparent; /* Make the background transparent */
-}
-
-.icon {
-    /* Set the icon size relative to the viewport or container size */
-    width: 5vw; /* Example: 5% of the viewport width */
-    height: 5vw; /* Maintain aspect ratio */
-    /* Adjust as needed for your design */
-}
-
-.custom-title-gradient, .file-display-box {
-    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
-}
-
-.file-display-box .icon {
-    font-size: clamp(1.5rem, 5vw, 3rem); /* Dynamically adjust icon size */
-    color: rgba(255, 255, 255, 0.5);
+    justify-content: center; /* Center content vertically and horizontally */
+    margin: 1px;
     position: relative;
-}
-
-.icon {
-    /* Set the icon size relative to the viewport or container size */
-    width: 5vw; /* Example: 5% of the viewport width */
-    height: 5vw; /* Maintain aspect ratio */
-    /* Adjust as needed for your design */
-}
-
-.file-display-box .title {
-    font-size: clamp(0.8rem, 3vw, 1.5rem); /* Dynamically adjust text size */
-    position: relative;
-    color: white; /* Set text color to white or any other color as needed */
-    text-align: center; /* Center the text */
-    margin-top: 5px; /* Add space between icon and text */
+    border-radius: 15px;
+    overflow: hidden;
+    background-color: transparent;
+    padding: 10px; /* Add padding to prevent content from touching the edges */
 }
 
 .custom-title-gradient {
     position: relative;
     @apply bg-clip-text text-transparent drop-shadow-2xl;
     background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
-    font-size: 2vw;
-    white-space: nowrap; /* Prevent text from wrapping */
-    overflow: hidden; /* Hide overflow */
-    text-overflow: ellipsis; 
+}
+
+.file-display-box .icon {
+    /* ... existing styles ... */
+    font-size: clamp(1.5rem, 5vw, 3rem);
+    color: rgba(255, 255, 255, 0.5);
+    position: relative;
+    max-width: 50%; /* Ensure the icon does not overflow the box */
+}
+
+.file-display-box .custom-title-gradient {
+    /* ... existing styles ... */
+    font-size: clamp(0.8rem, 2.5vw, 1.2rem); /* Adjust font size to fit better */
+    text-align: center;
+    margin-top: 5px;
+    max-width: 100%; /* Ensure the title does not overflow the box */
 }
 
 @media (max-width: 768px) {
     .icon {
-        width: 10vw;
-        height: 10vw;
+        width: 5vw;
+        height: 5vw;
     }
 
     .custom-title-gradient {
-        font-size: 3vw;
+        font-size: 5vw;
     }
 }
 
-
 .file-container-div {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Change to auto-fill for responsiveness */
+    grid-auto-rows: minmax(100px, auto); /* Set minimum row height */
     gap: 10px;
     padding: 20px;
+    justify-content: center; /* Center the items in the grid */
+    align-items: start; /* Align items to the start of each row */
+}
+
+@media (min-width: 768px) {
+    .file-container-div {
+        grid-template-columns: repeat(3, 1fr); /* Set to 3 columns when the viewport is wider than 768px */
+    }
+
+}
+
+@media (max-width: 768px) {
+    .file-display-box .icon {
+        /* Adjust icon size for small screens */
+        font-size: clamp(1.5rem, 10vw, 3rem); /* Use clamp for smooth scaling */
+    }
+
+    .file-display-box .custom-title-gradient {
+        /* Adjust title size for small screens */
+        font-size: clamp(0.8rem, 8vw, 1.2rem); /* Use clamp for smooth scaling */
+    }
+}
+
+@media (min-width: 769px) {
+    .file-display-box .icon {
+        /* Adjust icon size for larger screens */
+        font-size: clamp(1.5rem, 5vw, 3rem); /* Use clamp for smooth scaling */
+    }
+
+    .file-display-box .custom-title-gradient {
+        /* Adjust title size for larger screens */
+        font-size: clamp(0.8rem, 2.5vw, 1.2rem); /* Use clamp for smooth scaling */
+    }
 }

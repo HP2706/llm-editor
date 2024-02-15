@@ -19,8 +19,6 @@ export default function Editor() {
     const [Markdown, setMarkdown] = useState<string | null>('');
     const router = useRouter();
 
-    
-
     const appendFiles = (files: File[]) => {
         setSelectedFiles([...selectedFiles, ...files]);
     }
@@ -46,6 +44,23 @@ export default function Editor() {
             router.push('/authPage');
         }
     }, []);
+
+    /* const openFile = async (num : number) => {
+        console.log('open file');
+        if (!selectedFiles) {
+            console.log('no file, select a file first');
+            // make popup error message, fading
+            return;
+        }
+        const file = selectedFiles[num];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = reader.result;
+            console.log(text);
+            setMarkdown(text as string);
+        }
+        reader.readAsText(file);
+    } */
 
     const sendFile = async (num : number) => {
         console.log('calling API');
@@ -91,7 +106,7 @@ export default function Editor() {
                 func={(num : number) => sendFile(num)}> {/* this be done better */}
                 style={{ fontSize: '1rem' }}
             </BasicButton>
-            <MultiFileDisplay upperRight={[4000, 1000]} lowerLeft={[3800,700]} selectedFiles={selectedFiles}></MultiFileDisplay>
+            <MultiFileDisplay func={sendFile} upperRight={[1700, 300]} lowerLeft={[1400,0]} selectedFiles={selectedFiles}></MultiFileDisplay>
           </div>
         </BackgroundGradientAnimation>
     );
