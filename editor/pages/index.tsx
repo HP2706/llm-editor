@@ -29,6 +29,13 @@ export default function HomePage() {
           style={{ fontSize: '1rem' }}
         />
         <BasicButton
+          pos={[150, 50]}
+          name={"test"}
+          className={"custom-text-gradient"} 
+          func={() => navigateToAnotherPage('/tests')} 
+          style={{ fontSize: '1rem' }}
+        />
+        <BasicButton
           pos={[50, 50]}
           name={"Try it out"}
           className={"custom-text-gradient"} 

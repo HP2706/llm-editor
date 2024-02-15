@@ -38,33 +38,7 @@
     max-width: 100%; /* Ensure the title does not overflow the box */
 }
 
-@media (max-width: 768px) {
-    .icon {
-        width: 5vw;
-        height: 5vw;
-    }
 
-    .custom-title-gradient {
-        font-size: 5vw;
-    }
-}
-
-.file-container-div {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Change to auto-fill for responsiveness */
-    grid-auto-rows: minmax(100px, auto); /* Set minimum row height */
-    gap: 10px;
-    padding: 20px;
-    justify-content: center; /* Center the items in the grid */
-    align-items: start; /* Align items to the start of each row */
-}
-
-@media (min-width: 768px) {
-    .file-container-div {
-        grid-template-columns: repeat(3, 1fr); /* Set to 3 columns when the viewport is wider than 768px */
-    }
-
-}
 
 @media (max-width: 768px) {
     .file-display-box .icon {
@@ -88,4 +62,40 @@
         /* Adjust title size for larger screens */
         font-size: clamp(0.8rem, 2.5vw, 1.2rem); /* Use clamp for smooth scaling */
     }
+}
+
+@media (max-width: 768px) {
+    .icon {
+        width: 5vw;
+        height: 5vw;
+    }
+
+    .custom-title-gradient {
+        font-size: 5vw;
+    }
+}
+
+
+.file-container-div {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Keep auto-fill for responsiveness */
+    grid-auto-rows: minmax(100px, auto); /* Keep minimum row height */
+    gap: 5px; /* Reduce gap if you want the boxes tighter */
+    padding: 5px;
+    justify-content: end; /* Align the items to the end (right side) */
+    align-items: start; /* Align items to the start of each row */
+}
+
+@media (min-width: 768px) {
+    .file-container-div {
+        grid-template-columns: repeat(3, 1fr); /* Adjust the number of columns if necessary for tighter layout */
+    }
+}
+
+
+@media (min-width: 768px) {
+    .file-container-div {
+        grid-template-columns: repeat(3, 1fr); /* Set to 3 columns when the viewport is wider than 768px */
+    }
+
 }

@@ -41,5 +41,8 @@ next-env.d.ts
 *.pyo
 *.pyd
 __pycache__/
-*cpython
+*.cpython*
+*.DS_Store
+*.docx
+*.md
 ```

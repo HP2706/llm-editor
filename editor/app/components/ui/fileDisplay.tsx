@@ -7,54 +7,53 @@ import { BasicButton } from '@/app/components/ui/buttons';
 interface FileDisplayProps {
     title : string;
     Icon:  React.ElementType | JSX.Element | any; //fix typing here
-    func : () => void; // 
-    //size : number;
+    onClick: () => void;
 }
 
 const FileDisplay = (props : FileDisplayProps) => {
-    const {title, Icon, func} = props;
+    const {title, Icon, onClick} = props;
+
+
+    function dummyFunc() {
+        console.log('FileDisplay dummy func');
+    }
+    
     return (
-        <div className='file-display-box'>
-            <button onClick={() => { console.log('Button clicked'); func(); }}>
-                <Icon className="icon"/>
-                <div className="custom-title-gradient">
-                    {title}
-                </div>
-            </button>
-            
+        <div className='file-display-box' onClick={onClick}>
+            <Icon className="icon"/>
+            <div className="custom-title-gradient">
+                {title}
+            </div>
         </div>
     )
 }
 
 interface MultiFileDisplayProps {
     selectedFiles : File[];
-    upperRight : number[];
-    lowerLeft : number[];
     func : (inp:number) => void;
 }
 
 export const MultiFileDisplay = (props : MultiFileDisplayProps) => {
-    const {selectedFiles, upperRight, lowerLeft, func} = props;
+    const {selectedFiles, func} = props;
 
-    const style = {
-        position: 'absolute' as 'absolute',
-        top: `${lowerLeft[1]}px`, // Assuming the Y coordinate is vertical position from top
-        left: `${lowerLeft[0]}px`, // Assuming the X coordinate is horizontal position from left
-        width: `${upperRight[0] - lowerLeft[0]}px`, // Width based on the difference between right and left X coordinates
-        height: `${upperRight[1] - lowerLeft[1]}px`, // Height based on the difference between upper and lower Y coordinates
-    };
+    function dummyFunc() {
+        console.log('dummy func');
+    }
 
     return (
-        <div style={style} className='file-container-div'>
+        <div className='file-container-div justify-end' onClick={dummyFunc}>
             {selectedFiles.length > 0 &&
             selectedFiles.map((file, index) => {
                 let icon = null;
                 if (file.name.endsWith('docx')) {
                     icon = WordIcon;
-                } else  {
+                } else {
                     icon = MarkDownIcon;
                 }
-                return <FileDisplay func={() => func(index)} key={index} title={file.name.split('.').slice(0, -1).join('.')} Icon={icon}></FileDisplay>;
+                return <FileDisplay onClick={dummyFunc} 
+                    key={index} title={file.name.split('.').slice(0, -1).join('.')} 
+                    Icon={icon}>
+                </FileDisplay>;
             })}
         </div>
     )

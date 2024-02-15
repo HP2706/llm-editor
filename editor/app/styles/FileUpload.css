@@ -1,6 +1,6 @@
 /* FileUpload.css */
 .file-upload {
-  position: relative; /* Use absolute positioning */
+  position: absolute; /* Use absolute positioning */
   top: 0; /* Align to the top of the screen */
   left: 50%; /* Center relative to the left of the screen */
   transform: translateX(-50%); /* Offset by half of the element's width */

@@ -18,27 +18,31 @@ from .DocProcessing import Process_file # type: ignore
 #from .schemas import User, AuthenticationResponse # type: ignore
 #from .auth import supabase, JWTBearer
 from .dataModels import Document, TokenProb
-from .computeLogProbs import Model
 
 
 class DebugMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        body = await request.body()
-        
-        # Log the body or do whatever processing you need here
-        try:
-            json_body = json.loads(body)
-            print("Received JSON data", json_body)
-        except json.JSONDecodeError:
-            print("Received non-JSON data")
-        except Exception as e:
-            print("Error processing request body", e)
-        
-        # Create a new request with the same body for downstream processing
-        request = Request(scope=request.scope, receive=await self._get_body_receive(body))
-        
-        response = await call_next(request)
-        return response
+        if request.url.path not in ["/api/editDoc", "/api/logprobs"]:
+            body = await request.body()
+            # Log the body or do whatever processing you need here
+            try:
+                json_body = json.loads(body)
+                print("Received JSON data", json_body)
+            except json.JSONDecodeError:
+                print("Received non-JSON data")
+            except Exception as e:
+                print("Error processing request body", e)
+            
+            # Create a new request with the same body for downstream processing
+            request = Request(scope=request.scope, receive=await self._get_body_receive(body))
+            
+            response = await call_next(request)
+            return response
+        else:# we just bypass since it is format data and not json
+            response = await call_next(request)
+            print("bypassing debug middleware")
+            print("response", response)
+            return response
 
     async def _get_body_receive(self, body: bytes):
         async def receive() -> dict:
@@ -99,14 +103,11 @@ def ping():
     print("received Ping request")
     return "Server is up and running"
  
+
 @app.post("/api/editDoc", response_model=None)
-async def editDoc(useAsync : bool, file: UploadFile = File(...)) -> Response: # ignoring type:
+async def editDoc(useAsync : bool, doc: Document) -> Response: # ignoring type:
     '''This function takes a document and streams proposed edits'''
     try:
-        import time
-        t0 = time.time()
-        doc = await app.preprocess_file(file)
-        print("preprocess time", time.time() - t0)
         if useAsync:
             edits_stream = async_make_edits(doc)  # This is an AsyncGenerator
             return await convert_async_to_json_stream(edits_stream)  # Ensure this await is correct
@@ -130,7 +131,7 @@ async def editDoc1(doc: Document, useAsync : bool) -> Response: # ignoring type:
     except HTTPException as e:
         return e
 
-@app.post('/logprobs')
+@app.post('/api/logprobs')
 async def getLogProbs(file: UploadFile = File(...)) -> List[TokenProb]:
     '''This function takes a document and returns a list of proposed edits'''
     try:
