@@ -1,6 +1,10 @@
 from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Optional
 
+class EditDocRequest(BaseModel):
+    useAsync: bool
+    text: str
+
 class AuthenticationResponse(BaseModel):
     ok : bool
     error : Optional[str]

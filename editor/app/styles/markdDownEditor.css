@@ -102,6 +102,9 @@ body {
     border-bottom-right-radius: 10px;
     border-bottom-left-radius: 10px;
     position: relative;
+    max-height: calc(100vh - 50px); 
+    overflow-y: auto;
+    
   }
   
   .editor-input {
@@ -715,3 +718,10 @@ body {
     background-image: url(../../public/images/icons/markdown.svg);
   }
   
+  i.download {
+    background-image: url(../../public/images/icons/Cloud-download-icon.svg);
+  }
+
+  i.ai-magic {
+    background-image: url(../../public/images/icons/ai-magic.svg);
+  }

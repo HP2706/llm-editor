@@ -1,11 +1,11 @@
 //all the icons 
-const MarkDownIcon = (props: React.SVGProps<SVGSVGElement>) => {
+export const MarkDownIcon = (props: React.SVGProps<SVGSVGElement>) => {
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 512 512" {...props}>
 	    <path d="M448 405.333V106.667C448 83.198 428.802 64 405.333 64H106.667C83.198 64 64 83.198 64 106.667v298.666C64 428.802 83.198 448 106.667 448h298.666C428.802 448 448 428.802 448 405.333zM181.333 288l53.334 64 74.666-96 96 128H106.667l74.666-96z" fill="currentColor" />
     </svg>
 }
 
-const WordIcon = (props: React.SVGProps<SVGSVGElement>) => {
+export const WordIcon = (props: React.SVGProps<SVGSVGElement>) => {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
             <path 
@@ -15,6 +15,9 @@ const WordIcon = (props: React.SVGProps<SVGSVGElement>) => {
     );
   };
   
+export const GridiconsCloudDownload = (props: React.SVGProps<SVGSVGElement>) => {
+	return (<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}><path fill="currentColor" d="M18 9c-.009 0-.017.002-.025.003A6.496 6.496 0 0 0 5 9.5a6.5 6.5 0 0 0 .186 1.519C5.123 11.016 5.064 11 5 11a4 4 0 0 0-4 4c0 1.202.541 2.267 1.38 3h18.593C22.196 17.089 23 15.643 23 14a5 5 0 0 0-5-5m-6 7l-4-5h3V8h2v3h3z"></path></svg>);
+}
 
 // darkmode icons
 
@@ -33,4 +36,3 @@ export const SunIcon = (props: React.SVGProps<SVGSVGElement>) => {
     )
 };
 
-export { WordIcon, MarkDownIcon }

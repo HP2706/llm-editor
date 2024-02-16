@@ -44,3 +44,7 @@ def split_doc(n_tokens: int, document: Document) -> Union[List[Document], Docume
             split_docs.append(Document(text=current_text, metadata=Metadata(n_tokens=current_tokens)))
 
         return split_docs
+    
+def build_doc_from_string(text: str) -> Document:
+    '''this function builds a document object from a string'''
+    return Document(text=text, metadata=Metadata(n_tokens=count_tokens(text)))

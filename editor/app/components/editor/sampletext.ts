@@ -4,7 +4,7 @@ import { $createParagraphNode, $createTextNode, $getRoot } from "lexical";
 
 import { $createLinkNode } from "@lexical/link";
 
-export default function prepopulatedText() {
+export default async function prepopulatedText() {
   const root = $getRoot();
 
   const heading = $createHeadingNode("h1");
@@ -16,7 +16,7 @@ export default function prepopulatedText() {
   root.append(quote);
   const paragraph = $createParagraphNode();
   paragraph.append(
-    $createTextNode("Here are some text formats: "),
+    $createTextNode("Her arr som textss formats: "),
     $createTextNode("code").toggleFormat("code"),
     $createTextNode(", "),
     $createTextNode("bold").toggleFormat("bold"),

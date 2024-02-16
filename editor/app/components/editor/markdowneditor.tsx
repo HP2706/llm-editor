@@ -6,7 +6,6 @@ import {
   $convertToMarkdownString,
   TRANSFORMERS,
 } from '@lexical/markdown';
-import { $getRoot, LexicalEditor, createEditor } from 'lexical';
 import { AutoLinkNode, LinkNode } from "@lexical/link";
 import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import { Dispatch, SetStateAction } from "react";
@@ -14,9 +13,8 @@ import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { ListItemNode, ListNode } from "@lexical/list";
 import React, { useEffect, useRef, useState } from 'react';
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
-import {docx_to_html, html_to_docx, html_to_lexical, html_to_markdown, lexical_to_html} from '@/lib/lexicalConversion';
+import {captureText, matchString} from '@/app/components/editor/editorUtils';
 
-import ActionsPlugin from "./plugins/ActionsPlugin";
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
 import CodeHighlightPlugin from "./plugins/CodeHighlightPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -25,10 +23,11 @@ import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { SteamAiEdits } from '@/app/components/editor/plugins/aiEditor';
+import { TextNode } from 'lexical';
 import ToolbarPlugin from "./plugins/ToolbarPlugin";
 import { exampleTheme } from "@/app/components/editor/themes/theme";
 import prepopulatedText  from "./sampletext";
-import { saveAs } from 'file-saver';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 
 function ErrorBoundary({ children }: { children: React.ReactNode }) {
@@ -53,7 +52,6 @@ function ErrorBoundary({ children }: { children: React.ReactNode }) {
   );
 }
 
-
 function Placeholder() {
   return (
     <div className="editor-placeholder">
@@ -62,52 +60,73 @@ function Placeholder() {
   );
 }
 
-interface FileExtension {
-  name : 'docx' | 'md' | 'txt';
-}
+const editorConfig = {
+  namespace: 'MyUniqueEditorNamespace',
+  editable: true,
+  theme: exampleTheme,
+  // Handling of errors during update
+  onError(error : any) {
+    throw error;
+  },
+  nodes: [
+    HeadingNode,
+    ListNode,
+    ListItemNode,
+    QuoteNode,
+    CodeNode,
+    CodeHighlightNode,
+    TableNode,
+    TableCellNode,
+    TableRowNode,
+    AutoLinkNode,
+    LinkNode
+  ],
+};
 
-async function export_file_from_LexicalState(editor: LexicalEditor, filename : string) {
-    if (filename.endsWith('docx')) {
-      //convert to html, then convert to docx
-      const htmlstring = lexical_to_html(editor);
-      const blob = await html_to_docx(htmlstring);
-      saveAs(blob, filename);
-    } else if (filename.endsWith('md') || filename.endsWith('txt')) {
-      //convert to markdown
-      const htmlstring = lexical_to_html(editor);
-      const markdown_blob = await html_to_markdown(htmlstring);
-      saveAs(markdown_blob, filename);
-    }
 
-}
 
 function EditorContent({ fileState }: { fileState: File }) {
   const [editor] = useLexicalComposerContext();
+  const [downloadFile, setDownloadFile] = useState<boolean>(false);
 
-  useEffect(() => {
+
+  useEffect(()=> { // this works for editing the file
+      editor.update(() => {
+        prepopulatedText(); 
+        /* captureText(editor).then((text) => {
+          console.log("captured text", text);
+        }); */
+        SteamAiEdits(editor);
+        // this is the function that should capture the text and send it to the backend
+        
+      })
+  }, [fileState, editor]);
+
+
+
+  document.addEventListener('click', (event) => {
+    console.log('Click detected:', event.target);
+  }, true); // Using capture phase for broader detection
+
+  /* useEffect(() => { // this does not work for editing the file
       const loadInitialContent = async () => {
         if (fileState.name.endsWith('.docx')) {
           //directly update the editor state
           const htmlFileState = await docx_to_html(fileState);
-          console.log("htmlFileState", htmlFileState)
           await html_to_lexical(htmlFileState, editor); // editor update happens internally
-          
-          export_file_from_LexicalState(editor, fileState.name);
           
         } else if (fileState.name.endsWith('.md') || fileState.name.endsWith('.txt')) {
           // get the markdown string
           console.log("fileState", fileState)
           const markdown = await fileState.text();
           editor.update( () => {
-            console.log("markdown", markdown)
             $convertFromMarkdownString(markdown, TRANSFORMERS)
           });
           //for testing ONLY
-          export_file_from_LexicalState(editor, fileState.name);
         }
     }
     loadInitialContent();
-  }, [fileState, editor]);
+  }, [fileState, editor]); */
 
   return (
     <div className="editor-inner">
@@ -129,38 +148,15 @@ interface MarkdownEditorProps {
   fileState : File; 
 }
 
-
 const MarkdownEditor = (props: MarkdownEditorProps) => {
   const { fileState } = props;
 
-  const editorConfig = {
-    namespace: 'MyUniqueEditorNamespace',
-    //editor: prepopulatedText(),
-    theme: exampleTheme,
-    nodes: [
-      HeadingNode,
-      ListNode,
-      ListItemNode,
-      QuoteNode,
-      CodeNode,
-      CodeHighlightNode,
-      TableNode,
-      TableCellNode,
-      TableRowNode,
-      AutoLinkNode,
-      LinkNode
-    ],
-    onError(error: any) {
-      throw error;
-    },
-  };
 
   return (
     <LexicalComposer initialConfig={editorConfig}>
       <div className="editor-container">
-        <ToolbarPlugin />
+        <ToolbarPlugin filename={fileState.name} />
           <EditorContent fileState={fileState} />
-        <ActionsPlugin />
       </div>
     </LexicalComposer>
   );

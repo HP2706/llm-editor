@@ -3,22 +3,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi import File, UploadFile, HTTPException
 from pydantic import BaseModel, Field
+from typing import AsyncGenerator
 from typing import List, Any, Optional, Iterable, Type, Union
+from .utils import build_doc_from_string
 import json
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import Response
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-import json
 
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from .llm import async_make_edits, make_edits # type: ignore
 from .DocProcessing import Process_file # type: ignore
 #from .schemas import User, AuthenticationResponse # type: ignore
 #from .auth import supabase, JWTBearer
 from .dataModels import Document, TokenProb
-
+from .fastapi_datamodels import EditDocRequest
 
 class DebugMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
@@ -82,11 +81,11 @@ app.add_middleware(
 app.add_middleware(DebugMiddleware)
 
 #utility function to convert async generator to streaming response
-from typing import AsyncGenerator
 async def convert_async_to_json_stream(data : AsyncGenerator[Type[BaseModel], None]) -> StreamingResponse:
     async def generate():
         async for item in data:
             if isinstance(item, BaseModel):
+                print("item", item)
                 yield json.dumps(item.model_dump()) + "\n"
     return StreamingResponse(content=generate(), media_type="application/json")
 
@@ -94,6 +93,7 @@ def convert_sync_to_json_stream(data : Iterable[Type[BaseModel]]) -> StreamingRe
     def generate():
         for item in data:
             if isinstance(item, BaseModel):
+                print("item", item)
                 yield json.dumps(item.model_dump()) + "\n"
     return StreamingResponse(content=generate(), media_type="application/json")
 
@@ -104,33 +104,20 @@ def ping():
     return "Server is up and running"
  
 
-@app.post("/api/editDoc", response_model=None)
-async def editDoc(useAsync : bool, doc: Document) -> Response: # ignoring type:
+@app.post("/api/editDoc")
+async def editDoc(request : EditDocRequest) -> Response: 
     '''This function takes a document and streams proposed edits'''
-    try:
-        if useAsync:
-            edits_stream = async_make_edits(doc)  # This is an AsyncGenerator
-            return await convert_async_to_json_stream(edits_stream)  # Ensure this await is correct
-        else:
-            edits_stream = make_edits(doc)
-            return convert_sync_to_json_stream(edits_stream)
-    except HTTPException as e:
-        return e
-
-@app.post('/api/editDocDebug', response_model=None)
-async def editDoc1(doc: Document, useAsync : bool) -> Response: # ignoring type:
-    '''This function takes a document and streams proposed edits'''
-    print("received doc", doc)
-    try:
-        if useAsync:
-            edits_stream = async_make_edits(doc)  # This is an AsyncGenerator
-            return await convert_async_to_json_stream(edits_stream)  # Ensure this await is correct
-        else:
-            edits_stream = make_edits(doc)
-            return convert_sync_to_json_stream(edits_stream)
-    except HTTPException as e:
-        return e
-
+    print("editDoc request", request)
+    print("received editDoc request ", request.text[:100], "...")
+    if request.useAsync:
+        doc = build_doc_from_string(request.text)
+        edits_stream = async_make_edits(doc)  # This is an AsyncGenerator
+        return await convert_async_to_json_stream(edits_stream)  # Ensure this await is correct
+    else:
+        doc = build_doc_from_string(request.text)
+        edits_stream = make_edits(doc) # use synchronous generator
+        return convert_sync_to_json_stream(edits_stream)
+    
 @app.post('/api/logprobs')
 async def getLogProbs(file: UploadFile = File(...)) -> List[TokenProb]:
     '''This function takes a document and returns a list of proposed edits'''

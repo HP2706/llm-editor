@@ -1,35 +1,38 @@
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  SELECTION_CHANGE_COMMAND,
-  FORMAT_TEXT_COMMAND,
-  $getSelection,
-  $isRangeSelection,
-  $createParagraphNode,
-  $getNodeByKey
-} from "lexical";
-import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
-import { $wrapNodes, $isAtNodeEnd } from "@lexical/selection";
-import { $getNearestNodeOfType, mergeRegister } from "@lexical/utils";
-import {
-  INSERT_ORDERED_LIST_COMMAND,
-  INSERT_UNORDERED_LIST_COMMAND,
-  REMOVE_LIST_COMMAND,
-  $isListNode,
-  ListNode
-} from "@lexical/list";
-import { createPortal } from "react-dom";
+  $createCodeNode,
+  $isCodeNode,
+  getCodeLanguages,
+  getDefaultCodeLanguage
+} from "@lexical/code";
 import {
   $createHeadingNode,
   $createQuoteNode,
   $isHeadingNode
 } from "@lexical/rich-text";
 import {
-  $createCodeNode,
-  $isCodeNode,
-  getDefaultCodeLanguage,
-  getCodeLanguages
-} from "@lexical/code";
+  $createParagraphNode,
+  $getNodeByKey,
+  $getSelection,
+  $isRangeSelection,
+  FORMAT_TEXT_COMMAND,
+  SELECTION_CHANGE_COMMAND
+} from "lexical";
+import { $getNearestNodeOfType, mergeRegister } from "@lexical/utils";
+import { $isAtNodeEnd, $wrapNodes } from "@lexical/selection";
+import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
+import {
+  $isListNode,
+  INSERT_ORDERED_LIST_COMMAND,
+  INSERT_UNORDERED_LIST_COMMAND,
+  ListNode,
+  REMOVE_LIST_COMMAND
+} from "@lexical/list";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { GridiconsCloudDownload } from '@/app/components/ui/icons';
+import { createPortal } from "react-dom";
+import { export_file_from_LexicalState } from '@/app/components/editor/editorUtils';
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
 const LowPriority = 1;
 
@@ -73,6 +76,12 @@ function positionEditorElement(editor, rect) {
     }px`;
   }
 }
+
+function Download({editor, filename}) {
+  editor.update(() => {
+      export_file_from_LexicalState(editor, filename); // Toggle bold on the current selection
+  });
+};
 
 function FloatingLinkEditor({ editor }) {
   const editorRef = useRef(null);
@@ -406,7 +415,7 @@ function BlockOptionsDropdownList({
   );
 }
 
-export default function ToolbarPlugin() {
+export default function ToolbarPlugin(filename ) {
   const [editor] = useLexicalComposerContext();
   const toolbarRef = useRef(null);
   const [blockType, setBlockType] = useState("paragraph");
@@ -603,6 +612,24 @@ export default function ToolbarPlugin() {
           </button>
           {isLink &&
             createPortal(<FloatingLinkEditor editor={editor} />, document.body)}
+          <button 
+            onClick={() => {
+              Download({editor, filename});
+            }}//TODO fix</>
+            className={"toolbar-item spaced" + (filename ? "active" : "")}
+            aria-label="Format Strikethrough"
+            >
+              <i className="format download" />
+          </button>
+          <button
+            onClick={() => {
+              console.log("TODO ai magic button");
+            }}//TODO fix</>
+            className={"toolbar-item spaced" + (filename ? "active" : "")}
+            aria-label="Format Strikethrough"
+            >
+              <i className="format ai-magic" />
+          </button>
         </>
       )}
     </div>

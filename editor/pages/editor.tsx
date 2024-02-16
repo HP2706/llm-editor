@@ -80,13 +80,6 @@ export default function Editor() {
                 <h3>
                     <FileUpload label={"upload your file here"} add_files={appendFiles}></FileUpload>
                 </h3> 
-                <BasicButton 
-                    pos={[50, 50]} 
-                    name={"call api"} 
-                    className={"custom-text-gradient"}
-                    func={(num : number) => getEdits(num)}> {/* this be done better */}
-                    style={{ fontSize: '1rem' }}
-                </BasicButton>
                 <div>
                     <MultiFileDisplay func={getEdits} selectedFiles={selectedFiles}></MultiFileDisplay>
                 </div>

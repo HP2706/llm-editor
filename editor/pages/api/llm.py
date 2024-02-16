@@ -152,13 +152,10 @@ class FunctionCallingLLM(LLM):
             assert isinstance(content, BaseModel), "content is not of type BaseModel"
             return response   
 
-import asyncio
-
-
 def process_doc(document : Document) -> Iterable[Type[BaseModel]]:
     DataModel = ModelEditFactory(document.text)
+    print("model recieved", DataModel, "document", document.text)
     llm = FunctionCallingLLM.get_instance()
-    edits = []
     for edit in llm._prompt(
         custom_instruction="""
         please make any necessary edits to the document, be thorough and precise in your edits.
@@ -180,7 +177,7 @@ async def async_process_doc(document : Document) -> AsyncGenerator[Type[BaseMode
         task_input=document.text,
         dataModel=Iterable[DataModel], # The Pydantic model for the response
         stream=True
-    ):  
+    ): 
         yield edit
 
 async def async_make_edits(document : Document) -> AsyncGenerator[Type[BaseModel], None]:
