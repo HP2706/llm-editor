@@ -1,9 +1,11 @@
-import { $generateHtmlFromNodes } from '@lexical/html';
-import {$generateNodesFromDOM} from '@lexical/html';
-import { LexicalEditor } from 'lexical';
+import {$generateHtmlFromNodes, $generateNodesFromDOM} from '@lexical/html';
+import { $getRoot, LexicalEditor, LexicalNode } from 'lexical';
+import { NodeHtmlMarkdown, NodeHtmlMarkdownOptions } from 'node-html-markdown'
+
 import { asBlob } from 'html-docx-js-typescript'
 import {marked} from 'marked';
 import {renderAsync} from 'docx-preview';
+
 //this page provides functions that convert 
 //.docx -> html -> lexical
 //lexical -> html -> .docx
@@ -20,7 +22,7 @@ export async function docx_to_html(file: File): Promise<string> {
 }
 
 //html -> .docx
-export async function html_to_docx(htmlString: string): Promise<any> {
+export async function html_to_docx(htmlString: string): Promise<Blob> {
     const opt = {
       margin: {
         top: 100
@@ -28,8 +30,11 @@ export async function html_to_docx(htmlString: string): Promise<any> {
       orientation: 'landscape' as const
     };
     const fileBuffer = await asBlob(htmlString, opt)
-
-    return fileBuffer;
+    const blob = new Blob(
+      //seems risky
+      [fileBuffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
+    );
+    return blob;
 }
 
 //markdown/txt -> html
@@ -40,24 +45,28 @@ export async function markdown_to_html(file: File): Promise<string> {
 
 //html -> markdown/txt
 export async function html_to_markdown(htmlString: string): Promise<Blob> {
-  const markdown = await marked.parse(htmlString, { renderer: new marked.Renderer() });
+  const markdown = NodeHtmlMarkdown.translate(htmlString);
   const markdownBlob = new Blob([markdown], { type: 'text/markdown' });
   return markdownBlob;
 }
 
 
 //html -> lexical
-export function html_to_lexical(htmlString: string, editor: any): any {
+export function html_to_lexical(htmlString: string, editor: LexicalEditor): void {
   const parser = new DOMParser();
-  const dom = parser.parseFromString(htmlString, 'text/html');
-  const nodes = $generateNodesFromDOM(editor, dom);
-  return nodes;
+  editor.update(() => {
+    const dom = parser.parseFromString(htmlString, 'text/html');
+    const nodes = $generateNodesFromDOM(editor, dom);
+    $getRoot().clear().append(...nodes);
+  });
+  
 }
 
 //lexical -> html
-export const lexical_to_html = (editor: LexicalEditor) => {
+export const lexical_to_html = (editor: LexicalEditor): string => {
+  let htmlString = '';
   editor.update(() => {
-    const htmlString = $generateHtmlFromNodes(editor, null);
-    console.log('htmlString', htmlString);
+    htmlString = $generateHtmlFromNodes(editor, null); // Adjusted to pass rootNode instead of editor.
   });
+  return htmlString;
 };

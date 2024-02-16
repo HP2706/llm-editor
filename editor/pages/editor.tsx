@@ -10,6 +10,7 @@ import { BackgroundGradientAnimation } from "@/app/components/ui/background-grad
 import { EditorState } from 'lexical'
 import {FileUpload} from '@/app/components/fileUpload';
 import Head from 'next/head';
+import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { MarkdownEditor } from '@/app/components/editor/markdowneditor';
 import {MultiFileDisplay} from '@/app/components/ui/fileDisplay';
 import React from "react";
@@ -18,29 +19,12 @@ import { useRouter } from "next/router";
 import {useTheme} from '@/app/components/ui/theme-context'; // adjust the path as necessary
 
 export default function Editor() {
-    const [htmlFileState, setHtmlFileState] = useState<string[]>([]);
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const router = useRouter();
 
     const appendFiles = async (files: File[]) => {
-        const newfilesPromises = files.map((file) => {
-            if (file.name.endsWith('docx')){
-                return docx_to_html(file);
-            } else if (file.name.endsWith('md') || file.name.endsWith('txt')) {
-                return markdown_to_html(file);
-            }
-            return Promise.resolve(null);
-        });
-    
-        const newfiles = (await Promise.all(newfilesPromises)).filter(file => file !== null) as string[];
         setSelectedFiles([...selectedFiles, ...files]);
-        setHtmlFileState([...htmlFileState, ...newfiles]);
     }
-
-    useEffect(() => {
-        console.log('selectedFiles', htmlFileState)
-    }, [htmlFileState]);
-
     
     const { authState, setAuthState } = useAuth();
     const { user, session } = authState;
@@ -106,8 +90,8 @@ export default function Editor() {
                 <div>
                     <MultiFileDisplay func={getEdits} selectedFiles={selectedFiles}></MultiFileDisplay>
                 </div>
-                {(htmlFileState.length !== 0) && 
-                    <MarkdownEditor htmlFileState={htmlFileState[0]} setHtmlFileState={setHtmlFileState} />
+                {(selectedFiles.length !== 0) && 
+                    <MarkdownEditor fileState={selectedFiles[0]}/>
                }
             </div>
         </BackgroundGradientAnimation>

@@ -1,14 +1,20 @@
 import '@/app/styles/globals.css';
 import '@/app/styles/markdDownEditor.css';
 
+import {
+  $convertFromMarkdownString,
+  $convertToMarkdownString,
+  TRANSFORMERS,
+} from '@lexical/markdown';
+import { $getRoot, LexicalEditor, createEditor } from 'lexical';
 import { AutoLinkNode, LinkNode } from "@lexical/link";
 import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import { Dispatch, SetStateAction } from "react";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
-import { LexicalEditor, createEditor } from 'lexical';
 import { ListItemNode, ListNode } from "@lexical/list";
 import React, { useEffect, useRef, useState } from 'react';
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
+import {docx_to_html, html_to_docx, html_to_lexical, html_to_markdown, lexical_to_html} from '@/lib/lexicalConversion';
 
 import ActionsPlugin from "./plugins/ActionsPlugin";
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
@@ -19,15 +25,11 @@ import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { TRANSFORMERS } from "@lexical/markdown";
 import ToolbarPlugin from "./plugins/ToolbarPlugin";
 import { exampleTheme } from "@/app/components/editor/themes/theme";
-import {html_to_lexical} from '@/lib/lexicalConversion';
 import prepopulatedText  from "./sampletext";
-
-//import { useLexicalComposerContext } from '@lexical/react'; // CANNOT GET THIS TO WORK ARGHH
-
-
+import { saveAs } from 'file-saver';
+import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 
 function ErrorBoundary({ children }: { children: React.ReactNode }) {
   const [hasError, setHasError] = useState(false);
@@ -60,63 +62,81 @@ function Placeholder() {
   );
 }
 
-interface MarkdownEditorProps {
-  htmlFileState : string; // this should be
-  setHtmlFileState: Dispatch<SetStateAction<string[]>>;
+interface FileExtension {
+  name : 'docx' | 'md' | 'txt';
 }
 
-const MarkdownEditor = (props : MarkdownEditorProps) => {
-  const {htmlFileState, setHtmlFileState} = props;
-  //const [editor] = useLexicalComposerContext(); // Get the Lexical editor instance
-  const editorContainerRef = useRef<HTMLDivElement>(null);
-  let editor: LexicalEditor | null | any = null;
+async function export_file_from_LexicalState(editor: LexicalEditor, filename : string) {
+    if (filename.endsWith('docx')) {
+      //convert to html, then convert to docx
+      const htmlstring = lexical_to_html(editor);
+      const blob = await html_to_docx(htmlstring);
+      saveAs(blob, filename);
+    } else if (filename.endsWith('md') || filename.endsWith('txt')) {
+      //convert to markdown
+      const htmlstring = lexical_to_html(editor);
+      const markdown_blob = await html_to_markdown(htmlstring);
+      saveAs(markdown_blob, filename);
+    }
+
+}
+
+function EditorContent({ fileState }: { fileState: File }) {
+  const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
-    if (editorContainerRef.current) {
-      editor = createEditor({
-        // Editor configuration
-        namespace: 'MyUniqueEditorNamespace',
-        theme: exampleTheme,
-        nodes: [
-          HeadingNode,
-          ListNode,
-          ListItemNode,
-          QuoteNode,
-          CodeNode,
-          CodeHighlightNode,
-          TableNode,
-          TableCellNode,
-          TableRowNode,
-          AutoLinkNode,
-          LinkNode
-        ],
-        onError(error: any) {
-          throw error;
-        },
-      });
-
-      // Convert your HTML to Lexical state and set it
-      const initialState = html_to_lexical(htmlFileState, editor);
-      editor.setEditorState(initialState);
-
-      // Cleanup on component unmount
-      return () => {
-        editor?.destroy();
-      };
+      const loadInitialContent = async () => {
+        if (fileState.name.endsWith('.docx')) {
+          //directly update the editor state
+          const htmlFileState = await docx_to_html(fileState);
+          console.log("htmlFileState", htmlFileState)
+          await html_to_lexical(htmlFileState, editor); // editor update happens internally
+          
+          export_file_from_LexicalState(editor, fileState.name);
+          
+        } else if (fileState.name.endsWith('.md') || fileState.name.endsWith('.txt')) {
+          // get the markdown string
+          console.log("fileState", fileState)
+          const markdown = await fileState.text();
+          editor.update( () => {
+            console.log("markdown", markdown)
+            $convertFromMarkdownString(markdown, TRANSFORMERS)
+          });
+          //for testing ONLY
+          export_file_from_LexicalState(editor, fileState.name);
+        }
     }
-  }, [htmlFileState]);
+    loadInitialContent();
+  }, [fileState, editor]);
 
-  
+  return (
+    <div className="editor-inner">
+      <RichTextPlugin
+        contentEditable={<ContentEditable className="editor-input" />}
+        placeholder={<Placeholder />}
+        ErrorBoundary={ErrorBoundary}
+      />
+      <AutoFocusPlugin />
+      <ListPlugin />
+      <LinkPlugin />
+      <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+      <CodeHighlightPlugin />
+    </div>
+  );
+}
+
+interface MarkdownEditorProps {
+  fileState : File; 
+}
+
+
+const MarkdownEditor = (props: MarkdownEditorProps) => {
+  const { fileState } = props;
+
   const editorConfig = {
     namespace: 'MyUniqueEditorNamespace',
-    editorState: html_to_lexical(htmlFileState, editor),
+    //editor: prepopulatedText(),
     theme: exampleTheme,
-
-    // Handling of errors during update
-    onError(error : any) {
-      throw error;
-    },
-    // Any custom nodes go here
     nodes: [
       HeadingNode,
       ListNode,
@@ -129,25 +149,17 @@ const MarkdownEditor = (props : MarkdownEditorProps) => {
       TableRowNode,
       AutoLinkNode,
       LinkNode
-    ]
+    ],
+    onError(error: any) {
+      throw error;
+    },
   };
-  
+
   return (
     <LexicalComposer initialConfig={editorConfig}>
       <div className="editor-container">
         <ToolbarPlugin />
-        <div className="editor-inner">
-          <RichTextPlugin
-            contentEditable={<ContentEditable className="editor-input" />}
-            placeholder={<Placeholder />}
-            ErrorBoundary={ErrorBoundary} // Add this line
-          />
-          <AutoFocusPlugin />
-          <ListPlugin />
-          <LinkPlugin />
-          <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
-          <CodeHighlightPlugin />
-        </div>
+          <EditorContent fileState={fileState} />
         <ActionsPlugin />
       </div>
     </LexicalComposer>
