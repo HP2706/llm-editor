@@ -1,21 +1,34 @@
-import { $createParagraphNode, $createTextNode, $getRoot, $getSelection, LexicalEditor, TextNode } from 'lexical';
+import '@/app/styles/markdDownEditor.css';
+
+import { $createParagraphNode, $createRangeSelection, $createTextNode, $getNodeByKey, $getRoot, $getSelection, LexicalEditor, TextNode } from 'lexical';
 import { html_to_docx, html_to_markdown, lexical_to_html } from '@/lib/lexicalConversion';
 
 import { saveAs } from 'file-saver';
 
 export async function export_file_from_LexicalState(editor: LexicalEditor, filename : string) {
-  if (filename.endsWith('docx')) {
-    //convert to html, then convert to docx
-    const htmlstring = lexical_to_html(editor);
-    const blob = await html_to_docx(htmlstring);
-    saveAs(blob, filename);
-  } else if (filename.endsWith('md') || filename.endsWith('txt')) {
-    //convert to markdown
-    const htmlstring = lexical_to_html(editor);
-    const markdown_blob = await html_to_markdown(htmlstring);
-    saveAs(markdown_blob, filename);
+  const download = async (editor: LexicalEditor, filename : string) => {
+    const htmlstring = await lexical_to_html(editor);
+    if (filename.endsWith('docx')) {
+      //convert to html, then convert to docx
+      const docx_blob = await html_to_docx(htmlstring);
+      
+      saveAs(docx_blob, filename);
+    } else if (filename.endsWith('md') || filename.endsWith('txt')) {
+      //convert to markdown
+      const markdown_blob = await html_to_markdown(htmlstring);
+      saveAs(markdown_blob, filename);
+    }
   }
+  editor.update(() => {
+    download(editor, filename);
+  });
 }
+/* 
+function Download({editor, filename}) {
+  editor.update(() => {
+      export_file_from_LexicalState(editor, filename); // Toggle bold on the current selection
+  });
+}; */
 
 export function captureText(editor: LexicalEditor): Promise<string> {
   return new Promise((resolve) => {

@@ -16,6 +16,33 @@ body {
     right: 0;
   }
   
+  .tooltip {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -60px;
+  }
+  
+  .edit-button {
+    background-color: #eee;
+    border: 0;
+    padding: 8px 12px;
+    position: relative;
+    margin-left: 5px;
+    border-radius: 15px;
+    color: #222;
+    display: inline-block;
+    cursor: pointer;
+  }
+
   .actions i {
     background-size: contain;
     display: inline-block;
@@ -129,7 +156,6 @@ body {
     font-size: 15px;
     user-select: none;
     display: inline-block;
-    pointer-events: none;
   }
   
   .editor-text-bold {
@@ -425,7 +451,6 @@ body {
     margin-left: -25px;
     margin-top: 11px;
     margin-right: 10px;
-    pointer-events: none;
   }
   
   i.chevron-down {

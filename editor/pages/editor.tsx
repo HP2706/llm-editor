@@ -81,7 +81,7 @@ export default function Editor() {
                     <FileUpload label={"upload your file here"} add_files={appendFiles}></FileUpload>
                 </h3> 
                 <div>
-                    <MultiFileDisplay func={getEdits} selectedFiles={selectedFiles}></MultiFileDisplay>
+                    <MultiFileDisplay selectedFiles={selectedFiles}></MultiFileDisplay>
                 </div>
                 {(selectedFiles.length !== 0) && 
                     <MarkdownEditor fileState={selectedFiles[0]}/>

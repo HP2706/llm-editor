@@ -63,10 +63,11 @@ export function html_to_lexical(htmlString: string, editor: LexicalEditor): void
 }
 
 //lexical -> html
-export const lexical_to_html = (editor: LexicalEditor): string => {
-  let htmlString = '';
-  editor.update(() => {
-    htmlString = $generateHtmlFromNodes(editor, null); // Adjusted to pass rootNode instead of editor.
+export const lexical_to_html = async (editor: LexicalEditor): Promise<string> => {
+  return new Promise<string>((resolve) => {
+    editor.update(() => {
+      const htmlString = $generateHtmlFromNodes(editor, null); // Adjusted to pass rootNode instead of editor.
+      resolve(htmlString); // Resolve the promise with the htmlString
+    });
   });
-  return htmlString;
 };

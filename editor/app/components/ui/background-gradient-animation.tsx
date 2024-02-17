@@ -165,6 +165,7 @@ export const BackgroundGradientAnimation = ({
               `[mix-blend-mode:var(--blending-value)] w-full h-full -top-1/2 -left-1/2`,
               `opacity-70`
             )}
+            style={{ pointerEvents: 'none' }}
           ></div>
         )}
       </div>

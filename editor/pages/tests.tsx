@@ -1,7 +1,7 @@
 'client';
 
 //this should be removed when done
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     docx_to_html,
     html_to_docx,
@@ -11,8 +11,9 @@ import {
 
 import { saveAs } from 'file-saver';
 
-export default function testHTMLCONVERSION() {
+export default function TestHTMLCONVERSION() {
     const [htmlContent, setHtmlContent] = useState('');
+
 
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files ? event.target.files[0] : null;

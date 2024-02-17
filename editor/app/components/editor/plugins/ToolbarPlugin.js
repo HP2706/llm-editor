@@ -27,11 +27,11 @@ import {
   ListNode,
   REMOVE_LIST_COMMAND
 } from "@lexical/list";
+import { AiEditButton, DownloadButton } from "./customToolbarButtons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { GridiconsCloudDownload } from '@/app/components/ui/icons';
 import { createPortal } from "react-dom";
-import { export_file_from_LexicalState } from '@/app/components/editor/editorUtils';
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
 const LowPriority = 1;
@@ -77,11 +77,7 @@ function positionEditorElement(editor, rect) {
   }
 }
 
-function Download({editor, filename}) {
-  editor.update(() => {
-      export_file_from_LexicalState(editor, filename); // Toggle bold on the current selection
-  });
-};
+
 
 function FloatingLinkEditor({ editor }) {
   const editorRef = useRef(null);
@@ -415,7 +411,7 @@ function BlockOptionsDropdownList({
   );
 }
 
-export default function ToolbarPlugin(filename ) {
+export default function ToolbarPlugin({filename} ) {
   const [editor] = useLexicalComposerContext();
   const toolbarRef = useRef(null);
   const [blockType, setBlockType] = useState("paragraph");
@@ -612,24 +608,8 @@ export default function ToolbarPlugin(filename ) {
           </button>
           {isLink &&
             createPortal(<FloatingLinkEditor editor={editor} />, document.body)}
-          <button 
-            onClick={() => {
-              Download({editor, filename});
-            }}//TODO fix</>
-            className={"toolbar-item spaced" + (filename ? "active" : "")}
-            aria-label="Format Strikethrough"
-            >
-              <i className="format download" />
-          </button>
-          <button
-            onClick={() => {
-              console.log("TODO ai magic button");
-            }}//TODO fix</>
-            className={"toolbar-item spaced" + (filename ? "active" : "")}
-            aria-label="Format Strikethrough"
-            >
-              <i className="format ai-magic" />
-          </button>
+          <DownloadButton editor={editor} filename={filename}/>
+          <AiEditButton editor={editor} filename={filename} />
         </>
       )}
     </div>

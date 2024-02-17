@@ -30,18 +30,17 @@ const FileDisplay = (props : FileDisplayProps) => {
 
 interface MultiFileDisplayProps {
     selectedFiles : File[];
-    func : (inp:number) => void;
 }
 
 export const MultiFileDisplay = (props : MultiFileDisplayProps) => {
-    const {selectedFiles, func} = props;
+    const {selectedFiles} = props;
 
-    function dummyFunc() {
-        console.log('dummy func');
+    const internalfunc = () => {
+        console.log('internalfunc');
     }
 
     return (
-        <div className='file-container-div justify-end' onClick={dummyFunc}>
+        <div className='file-container-div justify-end' onClick={internalfunc}>
             {selectedFiles.length > 0 &&
             selectedFiles.map((file, index) => {
                 let icon = null;
@@ -50,7 +49,7 @@ export const MultiFileDisplay = (props : MultiFileDisplayProps) => {
                 } else {
                     icon = MarkDownIcon;
                 }
-                return <FileDisplay onClick={dummyFunc} 
+                return <FileDisplay onClick={internalfunc} 
                     key={index} title={file.name.split('.').slice(0, -1).join('.')} 
                     Icon={icon}>
                 </FileDisplay>;

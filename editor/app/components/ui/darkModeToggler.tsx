@@ -1,5 +1,4 @@
 import { NightIcon, SunIcon } from '@/app/components/ui/icons';
-import { animated, useSpring } from 'react-spring';
 
 import React from 'react';
 
