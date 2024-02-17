@@ -13,11 +13,6 @@ interface FileDisplayProps {
 const FileDisplay = (props : FileDisplayProps) => {
     const {title, Icon, onClick} = props;
 
-
-    function dummyFunc() {
-        console.log('FileDisplay dummy func');
-    }
-    
     return (
         <div className='file-display-box' onClick={onClick}>
             <Icon className="icon"/>
@@ -30,10 +25,13 @@ const FileDisplay = (props : FileDisplayProps) => {
 
 interface MultiFileDisplayProps {
     selectedFiles : File[];
+    setFileIdx : (idx : number | null) => void;
 }
 
 export const MultiFileDisplay = (props : MultiFileDisplayProps) => {
-    const {selectedFiles} = props;
+    const {selectedFiles, setFileIdx} = props;
+
+
 
     const internalfunc = () => {
         console.log('internalfunc');
@@ -49,7 +47,7 @@ export const MultiFileDisplay = (props : MultiFileDisplayProps) => {
                 } else {
                     icon = MarkDownIcon;
                 }
-                return <FileDisplay onClick={internalfunc} 
+                return <FileDisplay onClick={() => setFileIdx(index)} 
                     key={index} title={file.name.split('.').slice(0, -1).join('.')} 
                     Icon={icon}>
                 </FileDisplay>;

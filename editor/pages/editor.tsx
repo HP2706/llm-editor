@@ -20,6 +20,7 @@ import {useTheme} from '@/app/components/ui/theme-context'; // adjust the path a
 
 export default function Editor() {
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [fileIdx, setFileIdx] = useState<number | null>(null);
     const router = useRouter();
 
     const appendFiles = async (files: File[]) => {
@@ -36,44 +37,6 @@ export default function Editor() {
         }
     }, []);
 
-    const getEdits = async (num : number) => { 
-        // this function is not working right now
-        /* console.log('calling API');
-        if (!selectedFiles) {
-            console.log('no file, select a file first');
-            // make popup error message, fading
-            return;
-        }
-
-        const testnum = 0; // we are setting this for testing purposes
-        
-        const host = process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000';
-        const endpoint = `${host}/api/convertDoc`;
-        console.log(endpoint);
-
-        
-        //formData.append("useAsync", "true"); // Assuming you want to use async processing, adjust the value as needed
-
-        const response = await fetch(endpoint, {
-            method: "POST",
-            body: {
-                doc : {
-                        title : selectedFiles[num].name.split('.').slice(0, -1).join('.'),
-                        n_tokens : 100, // dummyNumber CHANGE THIS IMPORTANT
-                        },
-                useAsync : true
-                
-            }
-        });
-        console.log(response);
-        if (!response.ok) {
-            console.error("Failed to call API", response.statusText);
-            return;
-        }
-        const data = await response.json();
-        console.log(data); */
-        }
-
     return (
         <BackgroundGradientAnimation>
             <div className="custom-div">
@@ -81,10 +44,10 @@ export default function Editor() {
                     <FileUpload label={"upload your file here"} add_files={appendFiles}></FileUpload>
                 </h3> 
                 <div>
-                    <MultiFileDisplay selectedFiles={selectedFiles}></MultiFileDisplay>
+                    <MultiFileDisplay setFileIdx={setFileIdx} selectedFiles={selectedFiles}></MultiFileDisplay>
                 </div>
-                {(selectedFiles.length !== 0) && 
-                    <MarkdownEditor fileState={selectedFiles[0]}/>
+                {(selectedFiles.length !== 0 && fileIdx !== null) && 
+                    <MarkdownEditor fileState={selectedFiles[fileIdx]}/>
                }
             </div>
         </BackgroundGradientAnimation>
