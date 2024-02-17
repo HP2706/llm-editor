@@ -21,6 +21,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.css", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "tailwind.config.js"],
+  "include": ["next-env.d.ts", "**/*.css", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "tailwind.config.js", "app/components/editor/plugins/ToolbarPlugin.js", "app/components/editor/plugins/ToolbarPlugin.js", "pages/testStream.jsx"],
   "exclude": ["node_modules"]
 }

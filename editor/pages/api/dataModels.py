@@ -14,7 +14,7 @@ class Document(BaseModel):
     metadata : Metadata = Field(..., description="The metadata of the document to be summarized")
 
 def ModelEditFactory(textData: str) -> Type[BaseModel]:
-    '''this creates a DecomposerResponse class but where external data is set. can arguably be done more elegantly.'''
+    '''this creates a Edit class where validation occurs across external data can arguably be done more elegantly.'''
     if not isinstance(textData, str):
         raise ValueError("textData must be a string got", type(textData))
     
@@ -26,7 +26,7 @@ def ModelEditFactory(textData: str) -> Type[BaseModel]:
         @field_validator('quote')
         def check_is_in_text(cls, quote : str) -> Optional[dict]:
             if quote not in textData:
-                raise ValueError("quote must be in the text")
+                raise ValueError("quote must be in the text got", quote, "which is not in:", textData)
             return quote
         
     return Edit

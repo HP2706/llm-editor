@@ -56,7 +56,8 @@ class FunctionCallingLLM(LLM):
 
     async def _async_prompt(self, custom_instruction : str , 
                 task_input: Optional[str], 
-                dataModel: Type[BaseModel], stream: bool,
+                dataModel: Iterable[Type[BaseModel]], 
+                stream: bool,
                 n_retries: int = 1
             ) -> Union[AsyncGenerator[BaseModel, None], BaseModel]:
         # the completion creation directly and assign the result to `response`    
@@ -90,10 +91,11 @@ class FunctionCallingLLM(LLM):
         # If the response is expected to be iterable, process it as such
         if stream:
             async for content in response:
-                assert isinstance(content, BaseModel), "content is not of type BaseModel"
-                if self.debug:
-                    print("async iterable response", content)
-                yield content
+                try:
+                    assert isinstance(content, BaseModel), "content is not of type BaseModel"
+                    yield content
+                except AssertionError as e:
+                    print(e)
         else:
             assert isinstance(content, BaseModel), "content is not of type BaseModel"
             yield response  # Assuming you want to return the iterable response 
@@ -101,7 +103,7 @@ class FunctionCallingLLM(LLM):
 
     def _prompt(self, custom_instruction : str , 
                 task_input: Optional[str], 
-                dataModel: Type[BaseModel], 
+                dataModel: Iterable[Type[BaseModel]], 
                 stream: bool,
                 n_retries: int = 1
             ) -> Union[str, Iterable]:
@@ -144,8 +146,11 @@ class FunctionCallingLLM(LLM):
             for content in response:
                 if self.debug:
                     print("sync iterable streamed response", content)
-                assert isinstance(content, BaseModel), "content is not of type BaseModel"
-                yield content
+                try:
+                    assert isinstance(content, BaseModel), "content is not of type BaseModel"
+                    yield content
+                except AssertionError as e:
+                    print(e)
         else:
             if self.debug:
                 print("response non streamed", response)
@@ -184,9 +189,10 @@ async def async_make_edits(document : Document) -> AsyncGenerator[Type[BaseModel
     docs = split_doc(n_tokens=500, document=document) # max of 500 tokens per prompt
     for doc in docs:
         async for edit in async_process_doc(doc):
+            print("edit", edit)
             yield edit
 
-def make_edits(document : Document) -> AsyncGenerator[Type[BaseModel], None]:
+def make_edits(document : Document) -> Iterable[Optional[Type[BaseModel]]]:
     docs = split_doc(n_tokens=500, document=document) # max of 500 tokens per prompt
     for doc in docs:
         for edit in process_doc(doc):

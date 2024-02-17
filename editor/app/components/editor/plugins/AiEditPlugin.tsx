@@ -5,65 +5,72 @@ import { captureText, matchString } from "../editorUtils";
 
 import { LexicalEditor } from "lexical";
 import { TextNode } from "lexical";
-import { registerCodeHighlighting } from "@lexical/code";
-import { useEffect } from "react";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
-export function SteamAiEdits(editor : LexicalEditor) {
-    captureText(editor).then( async (mytext :string) => {
-      // Correct the condition to check if the text is actually empty
-      if (mytext === ""){
-        console.log("mytext captured was empty");
-        return;
+interface Edit {
+  quote : string,
+  proposed_edit : string,
+  explanation? : string
+}
+
+export async function SteamAiEdits(editor: LexicalEditor) {
+  const mytext = await captureText(editor);
+
+  const host = process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000';
+  const endpoint = `${host}/api/editDoc`;
+  console.log(endpoint);
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      text: mytext,
+      useAsync: false
+    }),
+  });
+
+  let currenttime = new Date();
+
+  if (response.body) {
+    console.log("response time", ((new Date().getTime() - currenttime.getTime()) / 1000));
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+  
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+  
+      const chunk = decoder.decode(value, {stream: true});
+      const edits: Edit[] = chunk.split('\n').filter(line => line.trim()).map(line => JSON.parse(line));
+      
+      console.log("time to chunk in seconds", ((new Date().getTime() - currenttime.getTime()) / 1000));
+      console.log("edits", edits);
+      for (let edit of edits) {
+        const matchingNodes = await matchString(editor, edit.quote);
+        for (let node of matchingNodes) {
+          console.log("applying edit", ((new Date().getTime() - currenttime.getTime()) / 1000));
+          applyAIEdit(editor, node, edit);
+        }
       }
-      console.log("mytext captured", mytext);
+    }
+  }
+  
+}
 
-      const host = process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000';
-      const endpoint = `${host}/api/editDoc`;
-      console.log(endpoint);
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json', // Specify the content type as JSON
-        },
-        body: JSON.stringify({
-            text : mytext,
-            useAsync : false
-        }),
-      });
-
-      console.log(response);
-
-      if (response.body) {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        reader.read().then(function processText({ done, value }) {
-          if (done) {
-            console.log("Stream complete");
-            return;
-          }
-          // Process the chunk
-          const chunk = decoder.decode(value, { stream: true });
-          console.log("Received chunk", chunk);
-          const edits = chunk.split('\n').filter(line => line.trim()).map(line => JSON.parse(line));
-          edits.forEach(edit => {
-            console.log("edit", edit);
-            matchString(editor, edit.text)?.then((matchingNodes) => {
-              console.log("matchingNodes", matchingNodes);
-            });
-          });
-          // applyEditToEditor(edit);
-
-          // Read the next chunk
-          reader.read().then(processText);
-        });
-      }
-    });
-  return null;    
-} 
-
-
-// the lexical node
+function applyAIEdit(editor : LexicalEditor, node : TextNode, edit : Edit) {
+  // Apply the edit to the node
+  // For demonstration, let's change the text of the node to the proposed edit
+  editor.update(() => {
+    let text = node.getTextContent();
+    let index = text.indexOf(edit.quote);
+    if (index === -1) {
+      return;
+    }
+    let newText = text.slice(0, index) + edit.proposed_edit + text.slice(index + edit.quote.length);
+    node.setTextContent(newText); 
+  });
+}
 
 
 const editButton = (suggested_edit : string, explanation : string, func : () => void) => {
@@ -74,8 +81,6 @@ const editButton = (suggested_edit : string, explanation : string, func : () => 
     </div>
   );
 }; 
-
-
 
 // this is not working properly yet.
 class HighlightTextNode extends TextNode {

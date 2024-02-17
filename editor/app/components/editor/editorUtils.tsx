@@ -47,25 +47,28 @@ export function captureText(editor: LexicalEditor): Promise<string> {
 
 //this function goes through the textnodes and checks if a substring is present then returns
 // the node that contains the substring
-export function matchString(editor: LexicalEditor, mystring: string): Promise<TextNode[]> | undefined {
-  console.log("matchString called");
+export function matchString(editor: LexicalEditor, mystring: string): Promise<TextNode[]>  {
   return new Promise((resolve) => {
     editor.getEditorState().read( async () => {
-      const root = $getRoot();
       let matchingNodes : TextNode[] = [];
-      root.getAllTextNodes().forEach(async (node : TextNode) => {
-        if (node.isSimpleText()) {
-          let text = node.getTextContent();
-          if (text.includes(mystring)) {
-            matchingNodes.push(node);
+      await editor.getEditorState().read(async () => {
+        const root = $getRoot();
+        const allTextNodes = root.getAllTextNodes();
+        for (const node of allTextNodes) {
+          if (node.isSimpleText()) {
+            let text = node.getTextContent();
+            if (text.includes(mystring)) {
+              matchingNodes.push(node);
+            }
           }
         }
       });
       await resolve(matchingNodes);
       if (matchingNodes.length > 0) {
         return matchingNodes;
+      } else {
+        return []
       }
     });
-    return undefined;
   });
 }

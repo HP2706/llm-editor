@@ -1,23 +1,26 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Response
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse
-from fastapi import File, UploadFile, HTTPException
-from pydantic import BaseModel, Field
+from fastapi.responses import StreamingResponse
+from fastapi import File, UploadFile
+from pydantic import BaseModel
 from typing import AsyncGenerator
-from typing import List, Any, Optional, Iterable, Type, Union
+from typing import List, Iterable, Type, Union
 from .utils import build_doc_from_string
 import json
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-
+from functools import wraps
+from starlette.middleware.base import RequestResponseEndpoint
+import time
+import asyncio
 from .llm import async_make_edits, make_edits # type: ignore
 from .DocProcessing import Process_file # type: ignore
-#from .schemas import User, AuthenticationResponse # type: ignore
-#from .auth import supabase, JWTBearer
 from .dataModels import Document, TokenProb
 from .fastapi_datamodels import EditDocRequest
+import logging
+
+logging.basicConfig(filename='debug.log', level=logging.DEBUG)
+mylogger = logging.getLogger("debug")
 
 class DebugMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
@@ -78,37 +81,67 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-app.add_middleware(DebugMiddleware)
+#app.add_middleware(DebugMiddleware)
+
+
 
 #utility function to convert async generator to streaming response
 async def convert_async_to_json_stream(data : AsyncGenerator[Type[BaseModel], None]) -> StreamingResponse:
+    start_time = time.time()
     async def generate():
         async for item in data:
             if isinstance(item, BaseModel):
-                print("item", item)
                 yield json.dumps(item.model_dump()) + "\n"
+            end_time = time.time()  # End timing after yielding
+            mylogger.debug(logging.DEBUG, f"Async chunk took {end_time - start_time} seconds to send.")
     return StreamingResponse(content=generate(), media_type="application/json")
 
 def convert_sync_to_json_stream(data : Iterable[Type[BaseModel]]) -> StreamingResponse:
+    start_time = time.time()
     def generate():
-        for item in data:
+        for item in data: 
             if isinstance(item, BaseModel):
-                print("item", item)
                 yield json.dumps(item.model_dump()) + "\n"
+            end_time = time.time()  # End timing after yielding
+            mylogger.debug(logging.DEBUG, f"Sync chunk took {end_time - start_time} seconds to send.")
     return StreamingResponse(content=generate(), media_type="application/json")
+
+
+@app.post("/api/basicStream")
+def basicStream():
+    def generate():
+        for i in range(10):
+            yield json.dumps({"number": i}) + "\n"
+            time.sleep(2)
+    return StreamingResponse(content=generate(),  media_type="application/json")
 
 
 @app.get("/api/Ping")
 def ping():
     print("received Ping request")
     return "Server is up and running"
- 
+
+def timing_decorator(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        print(f"Timing {func.__name__} function")
+        start_time = time.time()
+        # Call the original function and get its response
+        response = await func(*args, **kwargs)
+
+        # After the function call completes, calculate the elapsed time
+        end_time = time.time()
+        print(f"{func.__name__} took {end_time - start_time} seconds to complete.")
+
+        # Return the original response without modification
+        return response
+
+    return wrapper
 
 @app.post("/api/editDoc")
+@timing_decorator
 async def editDoc(request : EditDocRequest) -> Response: 
     '''This function takes a document and streams proposed edits'''
-    print("editDoc request", request)
-    print("received editDoc request ", request.text[:100], "...")
     if request.useAsync:
         doc = build_doc_from_string(request.text)
         edits_stream = async_make_edits(doc)  # This is an AsyncGenerator

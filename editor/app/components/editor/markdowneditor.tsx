@@ -89,7 +89,6 @@ const editorConfig = {
 
 function EditorContent({ fileState }: { fileState: File }) {
   const [editor] = useLexicalComposerContext();
-  const [downloadFile, setDownloadFile] = useState<boolean>(false);
 
   useEffect(() => { // this does not work for editing the file
       const loadInitialContent = async () => {
