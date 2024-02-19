@@ -1,9 +1,10 @@
 import os
-from modal import Image, Secret, Stub, method,web_endpoint, asgi_app, enter
+from modal import Image, Secret, method,web_endpoint, asgi_app, enter, gpu
 from editor.pages.api.dataModels import Document, Metadata, TokenProb, Word
 from typing import List, Any, Union, Tuple
+from common import stub
+from editor.pages.api.utils import build_doc_from_string # not sure if traversing nextjs project is a good idea.
 import modal
-import math
 
 MODEL_DIR = "/model"
 BASE_MODEL = "microsoft/phi-2" #using phi for faster debugging #"mistralai/Mistral-7B-Instruct-v0.1"
@@ -30,6 +31,8 @@ image = (
         "huggingface_hub==0.19.4",
         "hf-transfer==0.1.4",
         "torch==2.1.2",
+        "tiktoken",
+        "fastapi==0.100.1"
     )
     # Use the barebones hf-transfer package for maximum download speeds. No progress bar, but expect 700MB/s.
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
@@ -40,25 +43,23 @@ image = (
     )
 )
 
-stub = Stub("example-vllm-inference", image=image)
+with image.imports():
+    import time
+    from vllm import LLM, SamplingParams
+    from transformers import AutoTokenizer
+    import gc
+    import math
 
-@stub.cls(gpu=modal.gpu.A10g, secrets=[Secret.from_name("HUGGINGFACE_API_KEY")], timeout=60)
+
+
+@stub.cls(gpu=gpu.A10G(),image = image,  secrets=[Secret.from_name("HUGGINGFACE_API_KEY")], timeout=60)
 class Model:
     def __enter__(self):
-        #TODO lots of latency in loading model.
-        import time
+        print("\ninitializing Model ______________________")
         t0 = time.time()
-        from vllm import LLM
-        from transformers import AutoTokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
         self.max_batch_size = 100
         self.llm = LLM(MODEL_DIR)
-        
-        self.template = """<s>[INST] <<SYS>>
-        {system}
-        <</SYS>>
-
-        {user} [/INST] """
         print("Time to load model:", time.time() - t0)
 
     def text_to_ids(self, tokens: Union[List[str], str]) -> List[int]:
@@ -75,7 +76,7 @@ class Model:
         i = 0
         last_split_idx = 0
         count = 0
-        elms1, elms2 = [], []
+        elms1 = []
         batch1, batch2 = [], []
         while i < len(lst1):
             if len(lst1[i]) + count > target_elm_count:
@@ -152,17 +153,16 @@ class Model:
         A = 1.0        # Full opacity
         return (R, G, B, A)
 
-
+    @method()
     def generate(self, document : Document, threshold : float = 0.0001) -> List[TokenProb]:
         assert 0 <= threshold <= 1
-        from vllm import SamplingParams
-        import time
-        import math
+        
+
+        print("\nGENERATING LOGPROBS-----------------------------------")
         batched_chunks, batched_correct_tokens = self.chunk_and_split(document)
 
 
         for batch_chunk, batch_next_token in zip(batched_chunks, batched_correct_tokens):
-            
             sampling_params = SamplingParams(
                 temperature=0.5,
                 top_p=1,
@@ -202,45 +202,21 @@ class Model:
               
               if not found:
                 TokenProbs.append(TokenProb(token=self.tokenizer.decode(correct_token_id), prob=0.0))
-
+            
             yield TokenProbs
     def drop_from_memory(self):
-        import gc
 
         # Assuming `model` is your model instance
         del self.llm
         gc.collect()
 
-        
 
 
-"""
-#TODO enable here
-@asgi_app()
-def app():
-    import fastapi.staticfiles
-    from fastapi import FastAPI
-    from fastapi.responses import Response
 
-    web_app = FastAPI()
-
-    @web_app.get("/infer/{prompt}")
-    async def getLogProbs(prompt: str):
-        image_bytes = Model().inference.remote(prompt)
-
-        return Response(image_bytes, media_type="image/png")
-
-    web_app.mount(
-        "/", fastapi.staticfiles.StaticFiles(directory="/assets", html=True)
-    )
-
-    return web_app """
-
-
-@stub.local_entrypoint()
+""" @stub.local_entrypoint()
 def main():
     model = Model()
     Doc = Document(text="This is a test document", metadata=Metadata(title="Test Document", n_tokens=4, n_words=4))
-    out = model.generate_logits.remote(Doc)
-    print(out)
+    out = model.generate.remote(Doc)
+    print(out) """
 
