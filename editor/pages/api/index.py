@@ -106,16 +106,6 @@ def convert_sync_to_json_stream(data : Iterable[Type[BaseModel]]) -> StreamingRe
             mylogger.debug(logging.DEBUG, f"Sync chunk took {end_time - start_time} seconds to send.")
     return StreamingResponse(content=generate(), media_type="application/json")
 
-
-@app.post("/api/basicStream")
-def basicStream():
-    def generate():
-        for i in range(10):
-            yield json.dumps({"number": i}) + "\n"
-            time.sleep(2)
-    return StreamingResponse(content=generate(),  media_type="application/json")
-
-
 @app.get("/api/Ping")
 def ping():
     print("received Ping request")

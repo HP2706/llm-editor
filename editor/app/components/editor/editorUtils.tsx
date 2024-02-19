@@ -48,27 +48,27 @@ export function captureText(editor: LexicalEditor): Promise<string> {
 //this function goes through the textnodes and checks if a substring is present then returns
 // the node that contains the substring
 export function matchString(editor: LexicalEditor, mystring: string): Promise<TextNode[]>  {
-  return new Promise((resolve) => {
-    editor.getEditorState().read( async () => {
-      let matchingNodes : TextNode[] = [];
-      await editor.getEditorState().read(async () => {
-        const root = $getRoot();
-        const allTextNodes = root.getAllTextNodes();
-        for (const node of allTextNodes) {
-          if (node.isSimpleText()) {
-            let text = node.getTextContent();
-            if (text.includes(mystring)) {
-              matchingNodes.push(node);
-            }
+  return new Promise(async (resolve) => {
+    let matchingNodes : TextNode[] = [];
+    await editor.getEditorState().read(async () => {
+      const root = $getRoot();
+      const allTextNodes = root.getAllTextNodes();
+      console.log("TextNodeCount", allTextNodes.length);
+      for (const node of allTextNodes) {
+        if (node.isSimpleText()) {
+          let text = node.getTextContent();
+          if (text.includes(mystring)) {
+            matchingNodes.push(node);
           }
         }
-      });
-      await resolve(matchingNodes);
-      if (matchingNodes.length > 0) {
-        return matchingNodes;
-      } else {
-        return []
       }
+      console.log("matchingNodes count", matchingNodes.length);
     });
+    await resolve(matchingNodes);
+    if (matchingNodes.length > 0) {
+      return matchingNodes;
+    } else {
+      return []
+    }
   });
 }

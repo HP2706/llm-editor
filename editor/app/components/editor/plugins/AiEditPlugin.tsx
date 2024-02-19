@@ -1,9 +1,9 @@
 // this plugin should capture all the text send it to backend, and get streamed edits back 
 // and apply highlighting with button to accept or reject the changes
 
+import { $createTextNode, $getRoot, $getSelection, ElementNode, LexicalEditor } from "lexical";
 import { captureText, matchString } from "../editorUtils";
 
-import { LexicalEditor } from "lexical";
 import { TextNode } from "lexical";
 
 interface Edit {
@@ -32,7 +32,6 @@ export async function SteamAiEdits(editor: LexicalEditor) {
   let currenttime = new Date();
 
   if (response.body) {
-    console.log("response time", ((new Date().getTime() - currenttime.getTime()) / 1000));
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
 
@@ -43,33 +42,47 @@ export async function SteamAiEdits(editor: LexicalEditor) {
   
       const chunk = decoder.decode(value, {stream: true});
       const edits: Edit[] = chunk.split('\n').filter(line => line.trim()).map(line => JSON.parse(line));
-      
-      console.log("time to chunk in seconds", ((new Date().getTime() - currenttime.getTime()) / 1000));
+  
       console.log("edits", edits);
       for (let edit of edits) {
         const matchingNodes = await matchString(editor, edit.quote);
         for (let node of matchingNodes) {
           console.log("applying edit", ((new Date().getTime() - currenttime.getTime()) / 1000));
-          applyAIEdit(editor, node, edit);
+          splitNode(editor, node, edit);
         }
       }
     }
   }
-  
 }
 
-function applyAIEdit(editor : LexicalEditor, node : TextNode, edit : Edit) {
+function splitNode(editor : LexicalEditor, node : TextNode, edit : Edit) {
   // Apply the edit to the node
   // For demonstration, let's change the text of the node to the proposed edit
   editor.update(() => {
     let text = node.getTextContent();
+    
     let index = text.indexOf(edit.quote);
     if (index === -1) {
       return;
     }
-    let newText = text.slice(0, index) + edit.proposed_edit + text.slice(index + edit.quote.length);
-    node.setTextContent(newText); 
+  
+    const parentNode = node.getParent();
+    if (parentNode) {
+      console.log("Node count before split and style:", parentNode.getChildren().length);
+      // Insert the new nodes at the position of the old node
+      const [leftNode, restNode] = node.splitText(index);
+      // Split the restNode at the end of the quote to isolate the quote
+      const [midNode, rightNode] = restNode.splitText(edit.quote.length);
+  
+      // Apply style to the midNode which contains the quote
+      midNode.setStyle("background-color: yellow;");
+      
+    } else {
+      console.error("No parent node found");
+    }
   });
+  
+  
 }
 
 
@@ -82,41 +95,52 @@ const editButton = (suggested_edit : string, explanation : string, func : () => 
   );
 }; 
 
-// this is not working properly yet.
-class HighlightTextNode extends TextNode {
-  constructor(text: string) {
-    super(text);
-  }
-
-  static getType() {
-    return 'highlighttextnode';
-  }
-
-  static clone(node: HighlightTextNode) {
-    return new HighlightTextNode(node.__text);
-  }
-
-  createDOM(config: any) {
-    const span = document.createElement('span');
-    span.textContent = this.getTextContent();
-    
-    // this doesn't work yet
-    /* const buttonElement = editButton('Highlight', 'Click to highlight text', () => this.applyHighlight(span as Node));
-    span.appendChild(buttonElement); */
-    
-    return span;
+interface Edit {
+  quote : string,
+  explanation? : string, 
+  proposed_edit : string
 }
 
-  updateDOM(prevNode: any, dom: any) {
-    // Ensure the button is correctly targeted and the span is passed to applyHighlight
-    const button = dom.querySelector('.edit-button'); // Ensure this selector matches your button's class
-    button.onclick = () => this.applyHighlight(dom);
-    return true;
+class EditableTextNode extends ElementNode {
+  static getType() {
+    return 'editabletext';
   }
 
-  applyHighlight(domElement: HTMLElement) {
-    // Directly apply styles to the DOM element for highlighting
-    // For demonstration, let's change the background color of the entire text node
-    domElement.style.backgroundColor = 'yellow';
+  static clone(node) {
+    return new EditableTextNode(node.__text, node.__key);
+  }
+
+  constructor(text) {
+    super();
+    this.__text = text;
+  }
+
+  createDOM(config) {
+    const div = document.createElement('div');
+    div.style.position = 'relative';
+    return div;
+  }
+
+  updateDOM() {
+    return false;
+  }
+
+  append(...nodes) {
+    super.append(...nodes);
+    if (this.__text !== undefined) {
+      const textNode = $createTextNode(this.__text);
+      super.append(textNode);
+    }
+  }
+
+  // Method to append the edit button
+  appendEditButton(editor: LexicalEditor, edit: Edit) {
+    const button = document.createElement('button');
+    button.textContent = 'Edit';
+    button.onclick = () => {
+      // Define what happens when the button is clicked
+      console.log('Edit button clicked');
+    };
+    this.getDOM().appendChild(button);
   }
 }
