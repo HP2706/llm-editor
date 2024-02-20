@@ -12,15 +12,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from functools import wraps
 from starlette.middleware.base import RequestResponseEndpoint
 import time
-import asyncio
 from .llm import async_make_edits, make_edits # type: ignore
-from .DocProcessing import Process_file # type: ignore
 from .dataModels import Document, TokenProb
 from .fastapi_datamodels import EditDocRequest
-import logging
-
-logging.basicConfig(filename='debug.log', level=logging.DEBUG)
-mylogger = logging.getLogger("debug")
 
 class DebugMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
@@ -51,29 +45,14 @@ class DebugMiddleware(BaseHTTPMiddleware):
             return {"type": "http.request", "body": body, "more_body": False}
         return receive
 
-class Myserver(FastAPI):
-    def __init__(self):
-        super().__init__()
-        self.File = None
 
-    async def preprocess_file(self, file: UploadFile = File(...)) -> Union[Type[Document], HTTPException]:
-        if file.filename.endswith(('.docx', '.md', '.txt')): # type: ignore
-            Doc = await Process_file(file)
-            if isinstance(Doc, str):
-                raise HTTPException(status_code=400, detail=Doc)
-            max_words = 1000
-            if Doc.metadata.n_words > max_words: # type: ignore
-                raise HTTPException(status_code=400, detail="Document too long got " + str(Doc.metadata.n_words) + f" words, max is {max_words} words")
-            return Doc
-        else:
-            raise HTTPException(status_code=400, detail="Unsupported file format")
-
+   
 origins = [
     "http://localhost:3001",
     "http://localhost:3000",
 ]
 
-app = Myserver()
+app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -93,7 +72,6 @@ async def convert_async_to_json_stream(data : AsyncGenerator[Type[BaseModel], No
             if isinstance(item, BaseModel):
                 yield json.dumps(item.model_dump()) + "\n"
             end_time = time.time()  # End timing after yielding
-            mylogger.debug(logging.DEBUG, f"Async chunk took {end_time - start_time} seconds to send.")
     return StreamingResponse(content=generate(), media_type="application/json")
 
 def convert_sync_to_json_stream(data : Iterable[Type[BaseModel]]) -> StreamingResponse:
@@ -103,7 +81,6 @@ def convert_sync_to_json_stream(data : Iterable[Type[BaseModel]]) -> StreamingRe
             if isinstance(item, BaseModel):
                 yield json.dumps(item.model_dump()) + "\n"
             end_time = time.time()  # End timing after yielding
-            mylogger.debug(logging.DEBUG, f"Sync chunk took {end_time - start_time} seconds to send.")
     return StreamingResponse(content=generate(), media_type="application/json")
 
 @app.get("/api/Ping")

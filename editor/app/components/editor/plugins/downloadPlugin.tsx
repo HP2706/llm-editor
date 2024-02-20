@@ -18,19 +18,3 @@ export const DownloadButton = ({editor, filename} : {editor : LexicalEditor, fil
         </div>
     )
 }
-
-export const AiEditButton =  ({editor, filename} : {editor : LexicalEditor, filename : string}) => {
-    return (
-        <div>
-            <button
-            onClick={() => {
-                SteamAiEdits(editor);
-            }}
-            className={"toolbar-item spaced" + (filename ? "active" : "")}
-            aria-label="Format Strikethrough"
-            >
-              <i className="format ai-magic" />
-          </button>
-        </div>    
-    )
-}

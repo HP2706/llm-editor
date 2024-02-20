@@ -16,6 +16,7 @@ import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
 import { docx_to_html, html_to_lexical } from '@/lib/lexicalConversion';
 
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
+import { ButtonTextNode } from '@/app/components/editor/plugins/AiEditPlugin';
 import CodeHighlightPlugin from "./plugins/CodeHighlightPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
@@ -71,6 +72,7 @@ const editorConfig = {
     throw error;
   },
   nodes: [
+    ButtonTextNode,
     HeadingNode,
     ListNode,
     ListItemNode,

@@ -36,6 +36,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+#caching 
+*.db
 #python stuff
 *.pyc
 *.cpython-39.pyc

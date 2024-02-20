@@ -1,0 +1,21 @@
+/* 
+
+.tooltipStyle {
+    @apply relative inline-block;
+  }
+  
+  .tooltipTextStyle {
+    @apply invisible opacity-0 bg-black text-white text-center rounded-md py-2 absolute z-10;
+    width: 120px;
+    padding: 5px 0;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: opacity 0.3s;
+  }
+  
+  /* Adding hover effect using regular CSS since Tailwind's @apply doesn't support pseudo-classes */
+  .tooltip:hover .tooltipTextStyle {
+    @apply visible opacity-100;
+  }
+*/

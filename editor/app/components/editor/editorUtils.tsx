@@ -3,6 +3,8 @@ import '@/app/styles/markdDownEditor.css';
 import { $createParagraphNode, $createRangeSelection, $createTextNode, $getNodeByKey, $getRoot, $getSelection, LexicalEditor, TextNode } from 'lexical';
 import { html_to_docx, html_to_markdown, lexical_to_html } from '@/lib/lexicalConversion';
 
+import { LexicalNode } from 'lexical';
+import { nodeContext } from '@/lib/types';
 import { saveAs } from 'file-saver';
 
 export async function export_file_from_LexicalState(editor: LexicalEditor, filename : string) {
@@ -47,9 +49,9 @@ export function captureText(editor: LexicalEditor): Promise<string> {
 
 //this function goes through the textnodes and checks if a substring is present then returns
 // the node that contains the substring
-export function matchString(editor: LexicalEditor, mystring: string): Promise<TextNode[]>  {
+export function matchString(editor: LexicalEditor, targetQuote: string): Promise<nodeContext[]>  {
   return new Promise(async (resolve) => {
-    let matchingNodes : TextNode[] = [];
+    let matchingNodes : nodeContext[] = [];
     await editor.getEditorState().read(async () => {
       const root = $getRoot();
       const allTextNodes = root.getAllTextNodes();
@@ -57,8 +59,13 @@ export function matchString(editor: LexicalEditor, mystring: string): Promise<Te
       for (const node of allTextNodes) {
         if (node.isSimpleText()) {
           let text = node.getTextContent();
-          if (text.includes(mystring)) {
-            matchingNodes.push(node);
+          if (text.includes(targetQuote)) {
+            matchingNodes.push(
+              {
+                node : node, 
+                index : text.indexOf(targetQuote)
+              }
+            );
           }
         }
       }
@@ -72,3 +79,14 @@ export function matchString(editor: LexicalEditor, mystring: string): Promise<Te
     }
   });
 }
+
+
+export const findNode = (node : LexicalNode, nodes : LexicalNode[]) : (LexicalNode | null) => {
+  for (const n of nodes) {
+    if (n.getKey() === node.getKey()) {
+      return n;
+    }
+  }
+  return null;
+}
+

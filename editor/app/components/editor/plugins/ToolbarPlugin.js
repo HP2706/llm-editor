@@ -27,10 +27,10 @@ import {
   ListNode,
   REMOVE_LIST_COMMAND
 } from "@lexical/list";
-import { AiEditButton, DownloadButton } from "./customToolbarButtons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { GridiconsCloudDownload } from '@/app/components/ui/icons';
+import { AiEditButton } from "@/app/components/editor/plugins/AiEditPlugin";
+import { DownloadButton } from "@/app/components/editor/plugins/downloadPlugin";
 import { createPortal } from "react-dom";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
