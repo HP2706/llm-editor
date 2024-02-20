@@ -166,14 +166,16 @@ export class ButtonTextNode extends TextNode {
     // Create the text content
     const textContent = document.createElement('span');
     textContent.textContent = this.edit.proposed_edit; // Display the current text
+    textContent.style.color = 'red';
     textContent.className = 'editable-text-node'; // Add class for styling
 
     // Create the edit button
     const button = document.createElement('button');
     button.textContent = this.edit.proposed_edit; // Set button label
     button.className = 'edit-button'; // Add class for styling
-    button.style.display = 'none'; // Hide the button initially
+    button.style.display = 'inline'; // Hide the button initially
     button.onclick = () => {
+      
       applyEdit(this.editor, this);
     };
 
