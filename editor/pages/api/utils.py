@@ -32,7 +32,11 @@ def split_doc(n_tokens: int, document: Document) -> Union[List[Document], Docume
             tokens_in_sentence = count_tokens(sentence)
             if current_tokens + tokens_in_sentence > n_tokens:
                 # If adding this sentence exceeds the limit, store the current text as a document
-                split_docs.append(Document(text=current_text, metadata=Metadata(n_tokens=current_tokens)))
+                split_docs.append(
+                    Document(
+                        text=current_text, metadata=Metadata(n_tokens=current_tokens, n_words=len(current_text.split()))
+                    )
+                )
                 current_text = sentence  # Start a new document with the current sentence
                 current_tokens = tokens_in_sentence  # Reset token count
             else:
@@ -41,10 +45,14 @@ def split_doc(n_tokens: int, document: Document) -> Union[List[Document], Docume
 
         # Add the last part if there's any
         if current_text:
-            split_docs.append(Document(text=current_text, metadata=Metadata(n_tokens=current_tokens)))
+            split_docs.append(
+                Document(
+                    text=current_text, metadata=Metadata(n_tokens=current_tokens, n_words=len(current_text.split()))
+                )
+            )
 
         return split_docs
     
 def build_doc_from_string(text: str) -> Document:
     '''this function builds a document object from a string'''
-    return Document(text=text, metadata=Metadata(n_tokens=count_tokens(text)))
+    return Document(text=text, metadata=Metadata(title = None,n_tokens=count_tokens(text), n_words=len(text.split())))

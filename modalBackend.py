@@ -1,10 +1,10 @@
 import os
-from modal import Image, Secret, method,web_endpoint, asgi_app, enter, gpu
-from editor.pages.api.dataModels import Document, Metadata, TokenProb, Word
-from typing import List, Any, Union, Tuple
+from modal import Image, Secret, method, gpu
+from yaml import Token
+from editor.pages.api.dataModels import Document, TokenProb, Word
+from typing import Generator, List, Any, Union, Tuple
 from common import stub
-from editor.pages.api.utils import build_doc_from_string # not sure if traversing nextjs project is a good idea.
-import modal
+from editor.pages.api.utils import build_doc_from_string, split_doc # not sure if traversing nextjs project is a good idea.
 
 MODEL_DIR = "/model"
 BASE_MODEL = "microsoft/phi-2" #using phi for faster debugging #"mistralai/Mistral-7B-Instruct-v0.1"
@@ -45,7 +45,7 @@ image = (
 
 with image.imports():
     import time
-    from vllm import LLM, SamplingParams
+    from vllm import LLM, SamplingParams # type: ignore
     from transformers import AutoTokenizer
     import gc
     import math
@@ -62,11 +62,11 @@ class Model:
         self.llm = LLM(MODEL_DIR)
         print("Time to load model:", time.time() - t0)
 
-    def text_to_ids(self, tokens: Union[List[str], str]) -> List[int]:
-        return self.tokenizer.convert_tokens_to_ids(
-            self.tokenizer.tokenize(tokens)
+    def text_to_ids(self, text: type[str]) -> List[int]:
+        return self.tokenizer.convert_tokens_to_ids( # type: ignore
+            self.tokenizer.tokenize(text) # type: ignore
         )
-
+  
     def batch(self, lst: List[Any]) -> List[List[Any]]:
         return [lst[i:i + self.max_batch_size] for i in range(0, len(lst), self.max_batch_size)]
 
@@ -96,36 +96,32 @@ class Model:
             batch1.append(elms1)
             batch2.append(lst2[last_split_idx:i])
         return batch1, batch2
+        
+    def chunk_and_split(self, document: Document, idx : int = 1) -> Tuple[List[List[str]], List[List[int]]]:
+        '''this does not try to predict from the start but from idx-1(we need to predict idx word) to end of document
+        args :
+        - document : Document
+        - idx : int >=1,  the index of the word we want to predict the logprob from and to the end of the document
+        '''
 
-    def Split_by_changed_words(self, words: List[Word], document : Document) -> Tuple[List[List[str]], List[List[int]]]:
-        '''it takes the word to be replaced and formats it so the model can predict the logprob of the next word, 
-        arguable whether this is a good idea, what if the user added a word? or removed a word? then we can't use this method
-        '''
-        
-        tokens_ids = [self.text_to_ids(
-                document.text.split()[:word.position]
-            ) for word in words]
-    
-        next_tokens = self.tokenizer.convert_tokens_to_ids([word.string for word in words])
-        return self.batch(tokens_ids), self.batch(next_tokens)
-        
-    def chunk_and_split(self, document: Document) -> Tuple[List[List[str]], List[List[int]]]:
-        '''splits the text into i, i+1, i+2, ... i+n chunks and then separates into batches of max_batch_size
-        '''
+        if idx < 1:
+            raise ValueError("idx must be >= 1")
+        elif idx > document.metadata.n_words:
+            raise ValueError("idx must be <= the number of words in the document")
 
         #TODO this will get extremely inefficient for larger docs with python for loops, try to do this more efficiently
         #TODO implement more dynamic batching techniques, right now we have a uniform split,
         # which is just stupid since the distribution of tokens in the batch are cumulative, 
         # but you need to do way more work to predict the 100+1 token, than the 10+1 token
-          
+        
+        
         text = document.text
         token_ids = self.text_to_ids(text)
         n = len(token_ids)
-
-        next_tokens = token_ids[1:] # [token_ids[i] for i in range(1, n)]  # Start from the second token
-        chunks = [token_ids[:i+1] for i in range(0, n-1)] # we don't want the last token
+        next_tokens = token_ids[idx:]
+        chunks = [token_ids[:i+1] for i in range(idx, n-1)] # we don't want the last token
         return self.batch(chunks), self.batch(next_tokens) # batched_token_chunks(tokens as str) batched_next_tokens(token_ids)
-    
+
     def print_split(self, input : Tuple[List[List[str]], List[List[int]]]) -> None:
         '''prints the ouput of chunk_and_split for debugging'''
         #for debugging
@@ -152,14 +148,17 @@ class Model:
         B = 0          # Blue is constant
         A = 1.0        # Full opacity
         return (R, G, B, A)
+    
+
 
     @method()
-    def generate(self, document : Document, threshold : float = 0.0001) -> List[TokenProb]:
+    def generate(self, text : str, idx : int, threshold : float = 0.0001) -> Generator[TokenProb, None, None]: # type: ignore
         assert 0 <= threshold <= 1
         
-
+        document = build_doc_from_string(text)
         print("\nGENERATING LOGPROBS-----------------------------------")
-        batched_chunks, batched_correct_tokens = self.chunk_and_split(document)
+        #docs = split_doc(500, document) #TODO think about enabling this when for large docs.
+        batched_chunks, batched_correct_tokens = self.chunk_and_split(document, idx)
 
 
         for batch_chunk, batch_next_token in zip(batched_chunks, batched_correct_tokens):
@@ -176,7 +175,7 @@ class Model:
 
             results = self.llm.generate(prompt_token_ids = batch_chunk, sampling_params = sampling_params)
             print("took", time.time()-t0)
-            TokenProbs = []
+            TokenProbs : List[TokenProb] = []
             found = False
             for i in range(len(results)):
               outputs = results[i].outputs[0]
@@ -201,9 +200,13 @@ class Model:
                     break
               
               if not found:
-                TokenProbs.append(TokenProb(token=self.tokenizer.decode(correct_token_id), prob=0.0))
-            
-            yield TokenProbs
+                TokenProbs.append(TokenProb(
+                    token=self.tokenizer.decode(correct_token_id), 
+                    prob=0.0, color=self.value_to_rgba_color(0.0))
+                )
+
+            yield TokenProbs # type: ignore
+
     def drop_from_memory(self):
 
         # Assuming `model` is your model instance
@@ -213,10 +216,5 @@ class Model:
 
 
 
-""" @stub.local_entrypoint()
-def main():
-    model = Model()
-    Doc = Document(text="This is a test document", metadata=Metadata(title="Test Document", n_tokens=4, n_words=4))
-    out = model.generate.remote(Doc)
-    print(out) """
+
 

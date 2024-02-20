@@ -44,6 +44,7 @@ next-env.d.ts
 *.swp
 *.TOML
 index.cpython-39.pyc
+*cpython-39.pyc
 *.pyo
 *.pyd
 __pycache__/

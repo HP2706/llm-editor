@@ -11,3 +11,5 @@ bcrypt
 requests
 numpy
 matplotlib
+diskcache
+

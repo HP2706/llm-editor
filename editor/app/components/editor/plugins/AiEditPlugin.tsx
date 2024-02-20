@@ -1,9 +1,11 @@
 // this plugin should capture all the text send it to backend, and get streamed edits back 
 // and apply highlighting with button to accept or reject the changes
 
-import { $createTextNode, $getRoot, $getSelection, ElementNode, LexicalEditor, SerializedElementNode, SerializedTextNode } from "lexical";
+import '@/app/styles/MarkDownEditorNode.css';
+
+import { $createTextNode, $getNodeByKey, $getRoot, $getSelection, ElementNode, LexicalEditor, LexicalNode, SerializedElementNode, SerializedTextNode } from "lexical";
 import { Edit, nodeContext } from "@/lib/types";
-import { captureText, findNode, matchString } from "../editorUtils";
+import { captureText, collectAllNodes, findNode, matchString } from "../editorUtils";
 
 import { TextNode } from "lexical";
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
@@ -44,16 +46,44 @@ export async function SteamAiEdits(editor: LexicalEditor) {
         const matchingNodes = await matchString(editor, edit.quote);
         console.log("n matching nodes", matchingNodes.length);
         for (let node of matchingNodes) {
-          addButtonDecorator(editor, node, edit);
+          addTextButton(editor, node, edit);
         }
       }
     }
   }
 }
 
-function addButtonDecorator(editor : LexicalEditor, nodecontext : nodeContext, edit : Edit) {
+function applyAllEdits(editor : LexicalEditor) {
+  editor.update(() => {
+    const root = $getRoot();
+    const allTextNodes = collectAllNodes(root);
+    for (let node of allTextNodes) {
+      if (node instanceof ButtonTextNode) {
+        console.log("applying edit");
+        applyEdit(editor, node);
+      }
+    }
+  });
+}
+
+export const ApplyAllButtonNodes =  ({editor} : {editor : LexicalEditor}) => {
+  return (
+      <div>
+          <button
+          onClick={() => {
+              applyAllEdits(editor);
+          }}
+          className={"toolbar-item spaced"}
+          aria-label="Format Strikethrough"
+          >
+            <i className="format ai-magic" /> {/* TODO new icon*/}
+        </button>
+      </div>    
+  )
+}
+
+function addTextButton(editor : LexicalEditor, nodecontext : nodeContext, edit : Edit) {
   const { node, index } = nodecontext;
-  
   
   editor.update(() => {
     
@@ -62,7 +92,6 @@ function addButtonDecorator(editor : LexicalEditor, nodecontext : nodeContext, e
     const currentNode = findNode(node, allTextNodes) as TextNode;
     
     if (currentNode) {
-  
       const [leftNode, restNode] = currentNode.splitText(index);
       const [midNode, rightNode] = restNode.splitText(edit.quote.length);
       console.log("leftNode", leftNode);
@@ -70,7 +99,7 @@ function addButtonDecorator(editor : LexicalEditor, nodecontext : nodeContext, e
       console.log("rightNode", rightNode);
 
       // Apply style to the midNode which contains the quote
-      const buttonTextNode = new ButtonTextNode(edit);
+      const buttonTextNode = new ButtonTextNode(edit, editor);
       console.log("buttonTextNode type", buttonTextNode.getType());
       midNode.replace(buttonTextNode);
     
@@ -80,112 +109,88 @@ function addButtonDecorator(editor : LexicalEditor, nodecontext : nodeContext, e
   });
 }
 
+function applyEdit(editor : LexicalEditor, node : ButtonTextNode) {
+  editor.update(() => {
+    node.replace($createTextNode(node.proposed_edit));
+  });
+}
 
+
+interface SerializedButtonTextNode extends SerializedTextNode {
+  type: 'editabletext';
+  text: string;
+  edit: Edit;
+  editor : LexicalEditor;
+}
 
 export class ButtonTextNode extends TextNode {
   private edit: Edit;
+  public proposed_edit : string;
+  private editor : LexicalEditor;
 
   static getType(): string {
     return 'buttonTextNode';
   }
 
   static clone(node: ButtonTextNode): ButtonTextNode {
-    return new ButtonTextNode(node.edit);
+    return new ButtonTextNode(node.edit, node.editor);
   }
 
-  constructor(edit : Edit) {
+  constructor(edit : Edit, editor : LexicalEditor) {
     super(edit.quote);
-    this.__text = edit.proposed_edit;
+    this.__text = edit.quote;
+    this.proposed_edit = edit.proposed_edit;
     this.edit = edit;
+    this.editor = editor;
   }
 
-  // Override the render method to include a button
-  render() {
-    const tooltipStyle = {
-      position: 'relative' as 'relative',
-      display: 'inline-block',
+
+
+  static importJSON(serializedNode: SerializedButtonTextNode): ButtonTextNode {
+    const { text, edit, editor } = serializedNode;
+    const node = new ButtonTextNode(edit, editor);
+    return node;
+  }
+  // Implement the exportJSON method
+  exportJSON(): SerializedButtonTextNode {
+    return {
+      ...super.exportJSON(), // Spread the base properties
+      type: 'editabletext',
+      text: this.__text,
+      edit: this.edit,
+      editor : this.editor
     };
-  
-    const tooltipTextStyle = {
-      visibility: 'hidden' as 'hidden',
-      width: '120px',
-      backgroundColor: 'black',
-      color: '#fff',
-      textAlign: 'center' as 'center',
-      borderRadius: '6px',
-      padding: '5px 0',
-      position: 'absolute' as 'absolute',
-      zIndex: '1',
-      bottom: '100%',
-      left: '50%',
-      marginLeft: '-60px', 
-      opacity: '0',
-      transition: 'opacity 0.3s'
-    };
-  
-    const tooltipTextHoverStyle = {
-      visibility: 'visible',
-      opacity: '1'
-    };
-  
-    return (
-      <span style={tooltipStyle}>
-        {this.edit.proposed_edit}
-        <span style={tooltipTextStyle} className="tooltipText">{this.edit.explanation}</span>
-        <button onClick={this.applyEdit}>Click me</button>
-        <style>
-          {`
-            .tooltip:hover .tooltipText {
-              visibility: visible;
-              opacity: 1;
-            }
-          `}
-        </style>
-      </span>
-    );
   }
 
   createDOM(config: unknown): HTMLElement {
-    const div = document.createElement('div');
-    div.style.position = 'relative';
-    
+    // Create the text content
+    const textContent = document.createElement('span');
+    textContent.textContent = this.edit.proposed_edit; // Display the current text
+    textContent.className = 'editable-text-node'; // Add class for styling
+
     // Create the edit button
     const button = document.createElement('button');
-    button.textContent = 'Edit';
+    button.textContent = this.edit.proposed_edit; // Set button label
+    button.className = 'edit-button'; // Add class for styling
+    button.style.display = 'none'; // Hide the button initially
     button.onclick = () => {
-      this.__text = this.edit.proposed_edit;
-      console.log("edit applied");
+      applyEdit(this.editor, this);
     };
-    
-    // Mimic the structure of editButton
-    
-    // this is degenerate find another way to do this
-    const editButtonDiv = document.createElement('div');
-    editButtonDiv.className = "edit-button";
-    editButtonDiv.appendChild(button);
-  
-    const suggestedEditDiv = document.createElement('div');
-    suggestedEditDiv.className = "suggested-edit tooltip";
-    suggestedEditDiv.textContent = this.edit.proposed_edit;
-    editButtonDiv.appendChild(suggestedEditDiv);
-  
-    if (this.edit.explanation) {
-      const explanationDiv = document.createElement('div');
-      explanationDiv.className = "explanation tooltip";
-      explanationDiv.textContent = this.edit.explanation;
-      editButtonDiv.appendChild(explanationDiv);
-    }
-  
-    div.appendChild(editButtonDiv);
-    
-    return div;
-  }
 
-  applyEdit() {
-    this.__text = this.edit.proposed_edit;
-    console.log("edit applied");
+    // Append the button to the textContent span
+    textContent.appendChild(button);
+
+    // Show the button on hover of the textContent
+    textContent.onmouseover = () => {
+      button.style.display = 'inline'; // Show the button
+    };
+    textContent.onmouseout = () => {
+      button.style.display = 'none'; // Hide the button
+    };
+
+    return textContent;
   }
-}
+} 
 
 export const AiEditButton =  ({editor, filename} : {editor : LexicalEditor, filename : string}) => {
   return (

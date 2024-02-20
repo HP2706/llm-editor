@@ -1,4 +1,7 @@
-/* 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 .tooltipStyle {
     @apply relative inline-block;
@@ -14,8 +17,6 @@
     transition: opacity 0.3s;
   }
   
-  /* Adding hover effect using regular CSS since Tailwind's @apply doesn't support pseudo-classes */
   .tooltip:hover .tooltipTextStyle {
     @apply visible opacity-100;
   }
-*/

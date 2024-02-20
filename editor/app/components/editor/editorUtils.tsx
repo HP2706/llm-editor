@@ -1,9 +1,9 @@
 import '@/app/styles/markdDownEditor.css';
 
 import { $createParagraphNode, $createRangeSelection, $createTextNode, $getNodeByKey, $getRoot, $getSelection, LexicalEditor, TextNode } from 'lexical';
+import { ElementNode, LexicalNode } from 'lexical';
 import { html_to_docx, html_to_markdown, lexical_to_html } from '@/lib/lexicalConversion';
 
-import { LexicalNode } from 'lexical';
 import { nodeContext } from '@/lib/types';
 import { saveAs } from 'file-saver';
 
@@ -25,12 +25,7 @@ export async function export_file_from_LexicalState(editor: LexicalEditor, filen
     download(editor, filename);
   });
 }
-/* 
-function Download({editor, filename}) {
-  editor.update(() => {
-      export_file_from_LexicalState(editor, filename); // Toggle bold on the current selection
-  });
-}; */
+
 
 export function captureText(editor: LexicalEditor): Promise<string> {
   return new Promise((resolve) => {
@@ -80,6 +75,16 @@ export function matchString(editor: LexicalEditor, targetQuote: string): Promise
   });
 }
 
+export function collectAllNodes(node : LexicalNode, nodes : LexicalNode[] = []) : LexicalNode[] {
+  nodes.push(node);
+  if (node instanceof ElementNode) {
+    const children = node.getChildren();
+    for (const child of children) {
+      collectAllNodes(child, nodes);
+    } 
+  } 
+  return nodes;
+}
 
 export const findNode = (node : LexicalNode, nodes : LexicalNode[]) : (LexicalNode | null) => {
   for (const n of nodes) {

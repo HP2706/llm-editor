@@ -1,13 +1,13 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Iterable, List, Type, Optional, Tuple
+from typing import Type, Optional, Tuple
 
 # for editor
 
 # internal models
 class Metadata(BaseModel):
-    title: Optional[str] = Field(None, description="The title of the document")
+    title: Optional[str] = None
     n_tokens: int = Field(..., description="The number of tokens in the document")
-    n_words : Optional[int] = Field(None, description="The number of words in the document")
+    n_words : int = Field(..., description="The number of words in the document")
 
 class Document(BaseModel):
     text : str = Field(..., description="The text of the document to be summarized")
