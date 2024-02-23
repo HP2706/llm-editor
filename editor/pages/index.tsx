@@ -3,7 +3,6 @@
 import { BasicButton, BorderMagicButton, TailWindConnectButton } from '@/app/components/ui/buttons';
 import { useEffect, useState } from "react";
 
-import AuthForm from '@/app/components/authComponent'
 import { BackgroundGradientAnimation } from "@/app/components/ui/background-gradient-animation";
 import React from "react";
 import { useRouter } from "next/router";

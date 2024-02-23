@@ -14,7 +14,6 @@ import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { MarkdownEditor } from '@/app/components/editor/markdowneditor';
 import {MultiFileDisplay} from '@/app/components/ui/fileDisplay';
 import React from "react";
-import { useAuth } from '@/app/components/authContext';
 import { useRouter } from "next/router";
 import {useTheme} from '@/app/components/ui/theme-context'; // adjust the path as necessary
 
@@ -26,16 +25,6 @@ export default function Editor() {
     const appendFiles = async (files: File[]) => {
         setSelectedFiles([...selectedFiles, ...files]);
     }
-    
-    const { authState, setAuthState } = useAuth();
-    const { user, session } = authState;
-    
-    useEffect(() => {
-        if (!user) {
-            //think about how this can be done more elegantly, warning user for instance
-            router.push('/authPage');
-        }
-    }, []);
 
     return (
         <BackgroundGradientAnimation>
