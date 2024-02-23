@@ -4,6 +4,7 @@ import { $createParagraphNode, $createRangeSelection, $createTextNode, $getNodeB
 import { ElementNode, LexicalNode } from 'lexical';
 import { html_to_docx, html_to_markdown, lexical_to_html } from '@/lib/lexicalConversion';
 
+import {ButtonTextNode} from '@/app/components/editor/plugins/AiEditPlugin';
 import { nodeContext } from '@/lib/types';
 import { saveAs } from 'file-saver';
 
@@ -42,6 +43,19 @@ export function captureText(editor: LexicalEditor): Promise<string> {
   });
 }
 
+export function checkContainsButtonNode(editor : LexicalEditor) : boolean {
+  return editor.getEditorState().read(() => {
+    let allNodes = collectAllNodes($getRoot());
+    for (const node of allNodes) {
+      console.log("node IN checkContainsButtonNode", node.getType()) ;
+      if (node.getType() === 'buttonTextNode') {
+        return true;
+      }
+    }
+    return false;
+  });
+}
+
 //this function goes through the textnodes and checks if a substring is present then returns
 // the node that contains the substring
 export function matchString(editor: LexicalEditor, targetQuote: string): Promise<nodeContext[]>  {
@@ -55,6 +69,9 @@ export function matchString(editor: LexicalEditor, targetQuote: string): Promise
         if (node.isSimpleText()) {
           let text = node.getTextContent();
           if (text.includes(targetQuote)) {
+            console.log("matching node", node);
+            console.log("matching text", text);
+            console.log("index", text.indexOf(targetQuote));
             matchingNodes.push(
               {
                 node : node, 
@@ -73,6 +90,10 @@ export function matchString(editor: LexicalEditor, targetQuote: string): Promise
       return []
     }
   });
+}
+
+export const RGBA_TO_STRING = (rgba : [number, number, number, number]) : string => {
+  return `#${rgba[0]}${rgba[1]}${rgba[2]}${rgba[3]}`;
 }
 
 export function collectAllNodes(node : LexicalNode, nodes : LexicalNode[] = []) : LexicalNode[] {

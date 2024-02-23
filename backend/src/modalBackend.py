@@ -1,10 +1,9 @@
 import os
-from modal import Image, Secret, method, gpu
-from yaml import Token
-from editor.pages.api.dataModels import Document, TokenProb, Word
+from modal import Image, Secret, method, gpu, Volume
+from src.dataModels import Document, TokenProb
 from typing import Generator, List, Any, Union, Tuple
-from common import stub
-from editor.pages.api.utils import build_doc_from_string, split_doc # not sure if traversing nextjs project is a good idea.
+from src.common import stub, vol
+from src.utils import build_doc_from_string
 
 MODEL_DIR = "/model"
 BASE_MODEL = "microsoft/phi-2" #using phi for faster debugging #"mistralai/Mistral-7B-Instruct-v0.1"
@@ -32,7 +31,6 @@ image = (
         "hf-transfer==0.1.4",
         "torch==2.1.2",
         "tiktoken",
-        "fastapi==0.100.1"
     )
     # Use the barebones hf-transfer package for maximum download speeds. No progress bar, but expect 700MB/s.
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
@@ -52,7 +50,13 @@ with image.imports():
 
 
 
-@stub.cls(gpu=gpu.A10G(),image = image,  secrets=[Secret.from_name("HUGGINGFACE_API_KEY")], timeout=60)
+@stub.cls(
+    gpu=gpu.A10G(),
+    image = image,  
+    secrets=[Secret.from_name("HUGGINGFACE_API_KEY")], 
+    timeout=60,
+    volumes = {"/cache" : vol}
+)
 class Model:
     def __enter__(self):
         print("\ninitializing Model ______________________")
@@ -116,7 +120,7 @@ class Model:
         
         
         text = document.text
-        token_ids = self.text_to_ids(text)
+        token_ids = self.text_to_ids(text) # type: ignore
         n = len(token_ids)
         next_tokens = token_ids[idx:]
         chunks = [token_ids[:i+1] for i in range(idx, n-1)] # we don't want the last token
@@ -153,13 +157,14 @@ class Model:
 
     @method()
     def generate(self, text : str, idx : int, threshold : float = 0.0001) -> Generator[TokenProb, None, None]: # type: ignore
-        assert 0 <= threshold <= 1
+        assert 0 <= threshold <= 1 
+        import json
         
         document = build_doc_from_string(text)
         print("\nGENERATING LOGPROBS-----------------------------------")
         #docs = split_doc(500, document) #TODO think about enabling this when for large docs.
         batched_chunks, batched_correct_tokens = self.chunk_and_split(document, idx)
-
+        cached_logprobs = []
 
         for batch_chunk, batch_next_token in zip(batched_chunks, batched_correct_tokens):
             sampling_params = SamplingParams(
@@ -167,7 +172,7 @@ class Model:
                 top_p=1,
                 max_tokens=1, 
                 presence_penalty=1,
-                logprobs=1000,
+                logprobs=5000,
             )
             t0 = time.time()
             print("batched_chunks", len(batch_chunk))
@@ -176,36 +181,39 @@ class Model:
             results = self.llm.generate(prompt_token_ids = batch_chunk, sampling_params = sampling_params)
             print("took", time.time()-t0)
             TokenProbs : List[TokenProb] = []
-            found = False
             for i in range(len(results)):
-              outputs = results[i].outputs[0]
-              logprobdict = outputs.logprobs[0]
-              token_ids = list(logprobdict.keys())
-              prob_values = list(logprobdict.values())
-              correct_token_id = batch_next_token[i]
-              for j in range(len(token_ids)):
-                 if token_ids[j] == correct_token_id:
-                    proba = math.exp(prob_values[j]) # back to reg probs
-                    if proba < threshold: # if the prob is too low, we don't want to show it
-                        TokenProbs.append(TokenProb(
-                            token=self.tokenizer.decode(correct_token_id), 
-                            prob=0.0, color=self.value_to_rgba_color(0.0))
-                        )
-                    else:
-                        TokenProbs.append(TokenProb(
-                            token=self.tokenizer.decode(correct_token_id), 
-                            prob=proba, color=self.value_to_rgba_color(proba))
-                        )
-                    found = True
-                    break
-              
-              if not found:
-                TokenProbs.append(TokenProb(
-                    token=self.tokenizer.decode(correct_token_id), 
-                    prob=0.0, color=self.value_to_rgba_color(0.0))
-                )
+                found = False
+                logprobdict = results[i].outputs[0].logprobs[0]
+                token_ids = list(logprobdict.keys())
+                prob_values = list(logprobdict.values())
+                correct_token_id = batch_next_token[i]
+                for j in range(len(token_ids)):
+                    if token_ids[j] == correct_token_id:
+                        proba = math.exp(prob_values[j]) # back to reg probs
 
+                        TokenProbs.append(
+                            TokenProb(
+                                token=self.tokenizer.decode(correct_token_id), 
+                                prob=proba if proba > threshold else 0.0, 
+                                color=self.value_to_rgba_color(proba)
+                            )
+                        )
+
+
+                        found = True
+                        break
+                
+                if not found:
+                    TokenProbs.append(TokenProb(
+                        token=self.tokenizer.decode(correct_token_id), 
+                        prob=0.0, color=self.value_to_rgba_color(0.0))
+                    )
+            cached_logprobs.extend(TokenProbs)
             yield TokenProbs # type: ignore
+        with open("/cache/cached_logprobs.json", "w") as f:
+            f.write(json.dumps({"logprobs" : [cached_logprobs.model_dump() for cached_logprobs in cached_logprobs]}))
+        vol.commit()
+        
 
     def drop_from_memory(self):
 

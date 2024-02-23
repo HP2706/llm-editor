@@ -2,6 +2,8 @@
 
 "use client";
 
+import { ReactNode, useEffect, useState } from "react";
+
 import {ButtonsCard} from "@/app/components/ui/tailwind-css-buttons";
 import { FunctionsError } from "@supabase/supabase-js";
 
@@ -64,4 +66,20 @@ export const BasicButton = ({pos, name, className, func, style} : any)  : React.
             </div>
         </ButtonsCard>
     )
+}
+
+export const HoverButton = ({text, children} : {text: string, children: ReactNode}) : React.JSX.Element => {
+    const [showTooltip, setShowTooltip] = useState(false);
+
+    return (
+        <div 
+            className="tooltip-container" 
+            onMouseEnter={() => setShowTooltip(true)} 
+            onMouseLeave={() => setShowTooltip(false)}
+        >    
+            {children}
+            {showTooltip && <div className="custom-tooltip">{text}</div>}
+        </div>
+    )
+
 }

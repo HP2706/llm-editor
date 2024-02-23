@@ -27,11 +27,12 @@ import {
   ListNode,
   REMOVE_LIST_COMMAND
 } from "@lexical/list";
-import { AiEditButton, ApplyAllButtonNodes } from "@/app/components/editor/plugins/AiEditPlugin";
+import { AiEditButton, ApplyAllEditsButton } from "@/app/components/editor/plugins/AiEditPlugin";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ColorButton } from "@/app/components/editor/plugins/colorPlugin";
 import { DownloadButton } from "@/app/components/editor/plugins/downloadPlugin";
+import { HoverButton } from "@/app/components/ui/buttons";
 import { createPortal } from "react-dom";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
@@ -77,8 +78,6 @@ function positionEditorElement(editor, rect) {
     }px`;
   }
 }
-
-
 
 function FloatingLinkEditor({ editor }) {
   const editorRef = useRef(null);
@@ -517,17 +516,6 @@ export default function ToolbarPlugin({filename} ) {
     <div className="toolbar" ref={toolbarRef}>
       {supportedBlockTypes.has(blockType) && (
         <>
-          <button
-            className="toolbar-item block-controls"
-            onClick={() =>
-              setShowBlockOptionsDropDown(!showBlockOptionsDropDown)
-            }
-            aria-label="Formatting Options"
-          >
-            <span className={"icon block-type " + blockType} />
-            <span className="text">{blockTypeToBlockName[blockType]}</span>
-            <i className="chevron-down" />
-          </button>
           {showBlockOptionsDropDown &&
             createPortal(
               <BlockOptionsDropdownList
@@ -553,15 +541,19 @@ export default function ToolbarPlugin({filename} ) {
         </>
       ) : (
         <>
-          <button
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
-            }}
-            className={"toolbar-item spaced " + (isBold ? "active" : "")}
-            aria-label="Format Bold"
-          >
-            <i className="format bold" />
-          </button>
+
+          <HoverButton text = "Bold">
+            <button
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
+              }}
+              className={"toolbar-item spaced " + (isBold ? "active" : "")}
+              aria-label="Format Bold"
+            >
+              <i className="format bold" />
+            </button>
+          </HoverButton>
+          <HoverButton text = "Italic">
           <button
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic");
@@ -571,6 +563,8 @@ export default function ToolbarPlugin({filename} ) {
           >
             <i className="format italic" />
           </button>
+          </HoverButton>
+          <HoverButton text = "Underline">
           <button
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline");
@@ -580,6 +574,8 @@ export default function ToolbarPlugin({filename} ) {
           >
             <i className="format underline" />
           </button>
+          </HoverButton>
+          <HoverButton text = "Strikethrough">
           <button
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough");
@@ -587,19 +583,13 @@ export default function ToolbarPlugin({filename} ) {
             className={
               "toolbar-item spaced " + (isStrikethrough ? "active" : "")
             }
+            title="Strike format text"
             aria-label="Format Strikethrough"
           >
             <i className="format strikethrough" />
           </button>
-          <button
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code");
-            }}
-            className={"toolbar-item spaced " + (isCode ? "active" : "")}
-            aria-label="Insert Code"
-          >
-            <i className="format code" />
-          </button>
+          </HoverButton>
+          <HoverButton text = "insert link">
           <button
             onClick={insertLink}
             className={"toolbar-item spaced " + (isLink ? "active" : "")}
@@ -608,11 +598,12 @@ export default function ToolbarPlugin({filename} ) {
             <i className="format link" />
           </button>
           {isLink &&
-            createPortal(<FloatingLinkEditor editor={editor} />, document.body)}
+            createPortal(<FloatingLinkEditor editor={editor}/>, document.body)}
+          </HoverButton>
           <DownloadButton editor={editor} filename={filename}/>
-          <AiEditButton editor={editor} filename={filename} />
+          <AiEditButton editor={editor}/>
+          <ApplyAllEditsButton editor={editor}/>
           <ColorButton editor={editor} />
-          <ApplyAllButtonNodes editor={editor} />
         </>
       )}
     </div>

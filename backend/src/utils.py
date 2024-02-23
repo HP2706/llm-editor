@@ -10,7 +10,7 @@ def count_tokens(text: str) -> int:
     n_tokens = len(tokenizer.encode(text, disallowed_special=()))
     return n_tokens
 
-def split_doc(n_tokens: int, document: Document) -> Union[List[Document], Document]:
+def split_doc(n_tokens: int, document: Document) -> List[Document]:
     '''this function splits the document into parts of n_tokens or smaller'''
     if not document.metadata:
         n_tokens = count_tokens(document.text)

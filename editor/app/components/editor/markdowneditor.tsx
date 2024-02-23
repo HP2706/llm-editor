@@ -87,8 +87,6 @@ const editorConfig = {
   ],
 };
 
-
-
 function EditorContent({ fileState }: { fileState: File }) {
   const [editor] = useLexicalComposerContext();
 
@@ -119,9 +117,9 @@ function EditorContent({ fileState }: { fileState: File }) {
         placeholder={<Placeholder />}
         ErrorBoundary={ErrorBoundary}
       />
-      {/* <AutoFocusPlugin />
+      <AutoFocusPlugin />
       <ListPlugin />
-      <LinkPlugin /> */}
+      <LinkPlugin />
       <HistoryPlugin />
       <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
       <CodeHighlightPlugin />

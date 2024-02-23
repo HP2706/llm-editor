@@ -4,17 +4,16 @@ from fastapi.responses import StreamingResponse
 from fastapi import File, UploadFile
 from pydantic import BaseModel
 from typing import AsyncGenerator
-from typing import List, Iterable, Type, Union
-from .utils import build_doc_from_string
+from typing import List, Iterable, Type
 import json
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from functools import wraps
 from starlette.middleware.base import RequestResponseEndpoint
 import time
-from .llm import async_make_edits, make_edits # type: ignore
-from .dataModels import Document, TokenProb
-from .fastapi_datamodels import EditDocRequest
+from src.llm import async_make_edits, make_edits # type: ignore
+from src.dataModels import TokenProb
+from src.fastapi_datamodels import EditDocRequest
 
 class DebugMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
@@ -46,47 +45,27 @@ class DebugMiddleware(BaseHTTPMiddleware):
         return receive
 
 
-   
-origins = [
-    "http://localhost:3001",
-    "http://localhost:3000",
-]
-
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
-)
-#app.add_middleware(DebugMiddleware)
-
-
-
 #utility function to convert async generator to streaming response
 async def convert_async_to_json_stream(data : AsyncGenerator[Type[BaseModel], None]) -> StreamingResponse:
     start_time = time.time()
+    headers = {"Content-Encoding": "identity"}
     async def generate():
         async for item in data:
             if isinstance(item, BaseModel):
                 yield json.dumps(item.model_dump()) + "\n"
             end_time = time.time()  # End timing after yielding
-    return StreamingResponse(content=generate(), media_type="application/json")
+    return StreamingResponse(content=generate(), media_type="application/json", headers=headers)
 
 def convert_sync_to_json_stream(data : Iterable[Type[BaseModel]]) -> StreamingResponse:
     start_time = time.time()
+    headers = {"Content-Encoding": "identity"}
     def generate():
         for item in data: 
             if isinstance(item, BaseModel):
                 yield json.dumps(item.model_dump()) + "\n"
             end_time = time.time()  # End timing after yielding
-    return StreamingResponse(content=generate(), media_type="application/json")
+    return StreamingResponse(content=generate(), media_type="application/json", headers=headers)
 
-@app.get("/api/Ping")
-def ping():
-    print("received Ping request")
-    return "Server is up and running"
 
 def timing_decorator(func):
     @wraps(func)
@@ -104,57 +83,3 @@ def timing_decorator(func):
         return response
 
     return wrapper
-
-@app.post("/api/editDoc")
-@timing_decorator
-async def editDoc(request : EditDocRequest) -> Response: 
-    '''This function takes a document and streams proposed edits'''
-    if request.useAsync:
-        doc = build_doc_from_string(request.text)
-        edits_stream = async_make_edits(doc)  # This is an AsyncGenerator
-        return await convert_async_to_json_stream(edits_stream)  # Ensure this await is correct
-    else:
-        doc = build_doc_from_string(request.text)
-        edits_stream = make_edits(doc) # use synchronous generator
-        return convert_sync_to_json_stream(edits_stream)
-    
-@app.post('/api/logprobs')
-async def getLogProbs(file: UploadFile = File(...)) -> List[TokenProb]:
-    '''This function takes a document and returns a list of proposed edits'''
-    try:
-        Doc = await app.preprocess_file(file)
-        #TODO get logprobs, connect to modal endpoint
-    except HTTPException as e:
-        return e
-
-
-
-""" 
-
-@app.post('/authenticate', dependencies=[Depends(JWTBearer())], response_model=AuthenticationResponse)
-def authenticate(user : User) -> AuthenticationResponse:
-    if user_exists(user.email):
-        return AuthenticationResponse(ok = True)
-    else:
-
-
-def signup_user(user: User) -> bool:
-    '''signups user to supabase'''
-    try:
-        # Assuming User model has 'email' and 'password' fields
-        user_data = supabase.auth.sign_up(email=user.email, password=user.password)
-        if user_data.get("user"):
-            return True
-        else:
-            return False
-    except Exception as e:
-        print(f"Error signing up user: {e}")
-        return False
-
-
-def user_exists(key: str = "email", value: str = None) -> bool:
-    user = supabase.from_("users").select("*").eq(key, value).execute()
-    return len(user.data) > 0
-
-
- """

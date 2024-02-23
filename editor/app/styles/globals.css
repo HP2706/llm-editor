@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Add this to your CSS file */
+.tooltip-container {
+  position: relative;
+  display: flex;
+}
+
+.custom-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  margin-bottom: 1px;
+  background: #fff;
+  
+  vertical-align: middle;
+  font-size: 14px;
+  color: #777;
+  text-align: left;
+
+  padding: 4px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  vertical-align: middle;
+  /* Removed width, overflow, and text-overflow properties */
+}
+
+
 @layer components {
     .custom-div {
       @apply absolute z-50 inset-0 flex items-center justify-center text-white font-bold px-4 text-3xl text-center md:text-4xl lg:text-7xl;
@@ -56,6 +84,34 @@
     display: inline-block;
 }
 
+.hover-container {
+  position: relative;
+  display: inline-block;
+}
+
+.hover-button {
+  cursor: pointer;
+}
+
+.hover-text {
+  position: absolute;
+  top:  0;
+  left:  50%;
+  transform: translateX(-50%);
+  visibility: hidden;
+  opacity:  0;
+  transition: opacity  0.3s ease-in-out, visibility  0.3s ease-in-out;
+  /* Additional styling for the text */
+  background-color: #000;
+  color: #fff;
+  padding:  5px;
+  border-radius:  4px;
+}
+
+.hover-container:hover .hover-text {
+  visibility: visible;
+  opacity:  1;
+}
 
 /* div for dynamically resizing grid of file displays
 */

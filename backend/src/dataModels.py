@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Type, Optional, Tuple
-
+from typing_extensions import Self, Literal
 # for editor
 
 # internal models
@@ -19,17 +19,32 @@ def ModelEditFactory(textData: str) -> Type[BaseModel]:
         raise ValueError("textData must be a string got", type(textData))
     
     class Edit(BaseModel):
-        quote : str = Field(..., description="The quote to be edited, if possible avoid writing the entire sentence")
-        proposed_edit : str = Field(..., description="The proposed edit, if possible avoid writing the entire sentence")
-        explanation : Optional[str] = Field(..., description="A very bried explanation of why the edit, if it is obvious, it can be left empty")
+        quote: str = Field(..., description="The quote to be edited, if possible avoid writing the entire sentence")
+        proposed_edit: str = Field(..., description="The proposed edit, if possible avoid writing the entire sentence")
+        explanation: Optional[str] = Field(None, description="A very brief explanation of why the edit, if it is obvious, it can be left empty")
+
+        @model_validator(mode='after') # type: ignore
+        def check_is_not_quote(self) -> Self:
+            print("self attributes", self)
+            if self.proposed_edit == self.quote:
+                raise ValueError("proposed_edit must not be the same as the quote")
+            return self
 
         @field_validator('quote')
-        def check_is_in_text(cls, quote : str) -> Optional[dict]:
+        def check_is_in_text(cls, quote: str) -> str:
             if quote not in textData:
-                raise ValueError("quote must be in the text got", quote, "which is not in:", textData)
+                raise ValueError(f"quote must be in the text got '{quote}' which is not in: '{textData}'")
             return quote
+
+        def stringify(self) -> str:
+            return f"quote: {self.quote}, proposed_edit: {self.proposed_edit}, explanation: {self.explanation}\n"
         
     return Edit
+
+class Finished(BaseModel):
+    finished : Literal[True] = Field(..., description="""
+        Whether you are finished editing the document, this can only be true if the document has been fully edited.
+    """)
 
 # for getting logprobs
 

@@ -18,9 +18,10 @@ export interface LogProbs {
 }
 
 export interface LogProbsResponse {
-  logprobs : LogProbs[]
+  data : LogProbs[]
 }
 
 export interface LogProbRequest {
   prompt : string
+  idx : number
 }
