@@ -25,6 +25,7 @@ export default function Editor() {
     const appendFiles = async (files: File[]) => {
         setSelectedFiles([...selectedFiles, ...files]);
     }
+    
 
     return (
         <BackgroundGradientAnimation>

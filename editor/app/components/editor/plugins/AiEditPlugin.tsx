@@ -14,9 +14,8 @@ import { TextNode } from "lexical";
 export async function SteamAiEdits(editor: LexicalEditor) {
   const mytext = await captureText(editor);
 
-  const host = process.env.MODAL_BACKEND_URL ;
+  const host = process.env.MODAL_BACKEND_URL || process.env.NEXT_PUBLIC_MODAL_BACKEND_URL;
   const endpoint = `${host}/api/editDoc`;
-  console.log(endpoint);
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
