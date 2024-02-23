@@ -1,0 +1,16 @@
+# Simple Website for File Editing
+
+This website allows you to upload your files in Word or Markdown format and have them edited by an LLM (Language Learning Model). The editing process is streamed in real-time from the backend using the **Instructor** library. The editor itself is straightforward, utilizing the **Lexical** library for processing.
+
+## Key Features
+
+- **File Upload:** Supports Word or Markdown formats.
+- **Real-Time Editing:** Utilizes the Instructor library for streaming edits.
+- **Simple Editor:** Powered by the Lexical library.
+
+## Important Notes
+
+- **File Conversion:** When you re-download your edited file, be aware that formatting may be lost. This is due to the conversion process: Word/Markdown -> HTML -> Lexical -> HTML -> Word/Markdown. Unfortunately i have not been able  to find a simpler way to do this.
+- **Processing Time:** After initiating the edit, there may be a delay before streaming begins. This delay is necessary for booting up a modal server.
+
+Please be patient and allow some time for the system to process your request.

@@ -17,7 +17,6 @@ class LLM():
 
         if not isinstance(mode, InstructorMode):
             raise ValueError("mode must be of type InstructorMode")
-        
 
         if client == ClientType.OPENAI:
             self._async_client = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
@@ -57,53 +56,6 @@ class FunctionCallingLLM(LLM):
                 mode=InstructorMode.JSON,
             )
         return cls._instance
-
-    async def _async_prompt(self, custom_instruction : str , 
-                task_input: Optional[str], 
-                dataModel: Iterable[Type[BaseModel]], 
-                stream: bool,
-                n_retries: int = 1
-            ) -> Union[AsyncGenerator[BaseModel, None], BaseModel]:
-        # the completion creation directly and assign the result to `response`    
-    
-        messages=[
-            {
-                "role": "system",
-                "content": custom_instruction,
-            }
-        ]
-        if task_input is not None:
-            messages.append(
-                {
-                    "role": "user",
-                    "content": task_input,
-                }
-            )
-        
-        if self.debug:
-            print("messages", messages)
-        
-        response = await self._async_patched_client.chat.completions.create( # type: ignore
-            model=self._model_name,
-            temperature=0.1,
-            response_model=dataModel,
-            max_retries=n_retries,
-            stream=stream,  # Assuming `stream` determines if the response is iterable
-            messages=messages,
-        )
-
-        # If the response is expected to be iterable, process it as such
-        if stream:
-            async for content in response:
-                try:
-                    assert isinstance(content, BaseModel), "content is not of type BaseModel"
-                    yield content
-                except AssertionError as e:
-                    print(e)
-        else:
-            assert isinstance(response, BaseModel), "content is not of type BaseModel"
-            yield response  # Assuming you want to return the iterable response 
-
 
     def _prompt(self, custom_instruction : str , 
                 task_input: Optional[str], 
@@ -210,27 +162,6 @@ def process_doc(document : Document) -> Generator[Type[BaseModel], None, None]:
         stream=True
     ):
         yield edit # type: ignore
-
-async def async_process_doc(document : Document) -> AsyncGenerator[Type[BaseModel], None]:
-    DataModel = ModelEditFactory(document.text)
-    llm = FunctionCallingLLM.get_instance()
-    async for edit in llm._async_prompt( # type: ignore
-        custom_instruction="""
-        please make any necessary edits to the document, be thorough and precise in your edits.
-        a quote can be between a single mispelled word or a sentence. If error is obvious dont use description.
-        """,
-        task_input=document.text,
-        dataModel=Iterable[DataModel], # type: ignore
-        stream=True
-    ): 
-        yield edit
-
-async def async_make_edits(document : Document) -> AsyncGenerator[Type[BaseModel], None]:
-    docs = split_doc(n_tokens=500, document=document) # max of 500 tokens per prompt
-    for doc in docs:
-        async for edit in async_process_doc(doc):
-            print("edit", edit)
-            yield edit
 
 def make_edits(document : Document) -> Generator[Type[BaseModel], None, None]:
     docs = split_doc(n_tokens=500, document=document) # max of 500 tokens per prompt
