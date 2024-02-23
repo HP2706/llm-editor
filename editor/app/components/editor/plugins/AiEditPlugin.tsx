@@ -1,7 +1,7 @@
 // this plugin should capture all the text send it to backend, and get streamed edits back 
 // and apply highlighting with button to accept or reject the changes
 
-import '@/app/styles/MarkDownEditorNode.css';
+import '@/app/styles/MarkdownEditorNode.css';
 import '@/app/styles/globals.css';
 
 import { $createTextNode, $getNodeByKey, $getRoot, $getSelection, ElementNode, LexicalEditor, LexicalNode, SerializedElementNode, SerializedTextNode } from "lexical";

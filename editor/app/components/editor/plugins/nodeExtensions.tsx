@@ -1,4 +1,4 @@
-import '@/app/styles/MarkDownEditorNode.css';
+import '@/app/styles/MarkdownEditorNode.css';
 import '@/app/styles/globals.css';
 
 import { $createTextNode, $getRoot, DecoratorNode, LexicalEditor, SerializedTextNode } from "lexical";

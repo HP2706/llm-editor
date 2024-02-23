@@ -1,4 +1,4 @@
-import '@/app/styles/fileDisplay.css';
+import '@/app/styles/FileDisplay.css';
 
 import { MarkDownIcon, NightIcon, WordIcon } from '@/app/components/ui/icons';
 
