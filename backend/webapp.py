@@ -28,7 +28,7 @@ def fastapi_app():
     from fastapi.responses import Response
 
     web_app = FastAPI()
-    pattern =  "https://.*-hp2706s-projects.vercel.app(/editor)?|http://localhost:3000(/editor)?"
+    pattern = "https://.*-hp2706s-projects.vercel.app(/.*)?|http://localhost:3000(/.*)?"
 
     web_app.add_middleware(
         CORSMiddleware,
