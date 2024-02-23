@@ -1,4 +1,4 @@
-from typing import Generator, Union, Optional, Type, Iterable, AsyncGenerator
+from typing import Generator, Union, Optional, Type, Iterable
 from .types import ClientType, ModelType, InstructorMode # type: ignore
 from pydantic import BaseModel
 from openai import OpenAI, AsyncOpenAI

@@ -4,8 +4,8 @@ from modal import asgi_app
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from src.utils import build_doc_from_string
-from src.webapp_utils import convert_async_to_json_stream, convert_sync_to_json_stream, timing_decorator
-from src.llm import async_make_edits, make_edits
+from src.llm import make_edits
+from src.webapp_utils import convert_sync_to_json_stream, timing_decorator
 from src.fastapi_datamodels import EditDocRequest
 
 class LogProbRequest(BaseModel):
@@ -42,14 +42,9 @@ def fastapi_app():
     @timing_decorator
     async def editDoc(request : EditDocRequest) -> Response: 
         '''This function takes a document and streams proposed edits'''
-        if request.useAsync:
-            doc = build_doc_from_string(request.text)
-            edits_stream = async_make_edits(doc)  # This is an AsyncGenerator
-            return await convert_async_to_json_stream(edits_stream)  # Ensure this await is correct
-        else:
-            doc = build_doc_from_string(request.text)
-            edits_stream = make_edits(doc) # use synchronous generator
-            return convert_sync_to_json_stream(edits_stream)
+        doc = build_doc_from_string(request.text)
+        edits_stream = make_edits(doc) # use synchronous generator
+        return convert_sync_to_json_stream(edits_stream)
 
     return web_app
 
