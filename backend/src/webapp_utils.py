@@ -1,19 +1,15 @@
-from fastapi import FastAPI, HTTPException, Response
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Response
 from fastapi.responses import StreamingResponse
-from fastapi import File, UploadFile
 from pydantic import BaseModel
 from typing import AsyncGenerator
-from typing import List, Iterable, Type
+from typing import Iterable, Type
 import json
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from functools import wraps
 from starlette.middleware.base import RequestResponseEndpoint
 import time
-from src.llm import async_make_edits, make_edits # type: ignore
-from src.dataModels import TokenProb
-from src.fastapi_datamodels import EditDocRequest
+
 
 class DebugMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
@@ -47,23 +43,19 @@ class DebugMiddleware(BaseHTTPMiddleware):
 
 #utility function to convert async generator to streaming response
 async def convert_async_to_json_stream(data : AsyncGenerator[Type[BaseModel], None]) -> StreamingResponse:
-    start_time = time.time()
     headers = {"Content-Encoding": "identity"}
     async def generate():
         async for item in data:
             if isinstance(item, BaseModel):
                 yield json.dumps(item.model_dump()) + "\n"
-            end_time = time.time()  # End timing after yielding
     return StreamingResponse(content=generate(), media_type="application/json", headers=headers)
 
 def convert_sync_to_json_stream(data : Iterable[Type[BaseModel]]) -> StreamingResponse:
-    start_time = time.time()
     headers = {"Content-Encoding": "identity"}
     def generate():
         for item in data: 
             if isinstance(item, BaseModel):
                 yield json.dumps(item.model_dump()) + "\n"
-            end_time = time.time()  # End timing after yielding
     return StreamingResponse(content=generate(), media_type="application/json", headers=headers)
 
 

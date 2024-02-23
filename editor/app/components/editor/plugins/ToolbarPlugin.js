@@ -27,12 +27,10 @@ import {
   ListNode,
   REMOVE_LIST_COMMAND
 } from "@lexical/list";
-import { AiEditButton, ApplyAllEditsButton } from "@/app/components/editor/plugins/AiEditPlugin";
+import { AiEditButton, ApplyAllEditsButton, DownloadButton } from "@/app/components/editor/plugins/pluginButtons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { ColorButton } from "@/app/components/editor/plugins/colorPlugin";
-import { DownloadButton } from "@/app/components/editor/plugins/downloadPlugin";
-import { HoverButton } from "@/app/components/ui/buttons";
+import { HoverButton } from '@/app/components/ui/buttons';
 import { createPortal } from "react-dom";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
@@ -603,7 +601,6 @@ export default function ToolbarPlugin({filename} ) {
           <DownloadButton editor={editor} filename={filename}/>
           <AiEditButton editor={editor}/>
           <ApplyAllEditsButton editor={editor}/>
-          <ColorButton editor={editor} />
         </>
       )}
     </div>

@@ -1,6 +1,6 @@
 from .dataModels import Metadata, Document # type: ignore
 import tiktoken
-from typing import List, Union
+from typing import List
 
 def count_tokens(text: str) -> int:
        # Tokenize and count tokens with tiktoken
@@ -15,7 +15,6 @@ def split_doc(n_tokens: int, document: Document) -> List[Document]:
     if not document.metadata:
         n_tokens = count_tokens(document.text)
         
-
     if n_tokens >= document.metadata.n_tokens:
         return [document]
     else:

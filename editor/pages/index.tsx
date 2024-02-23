@@ -22,20 +22,6 @@ export default function HomePage() {
           Let Ai edit your writing
         </p> 
         <BasicButton
-          pos={[50, 1550]}
-          name={"Authenticate"}
-          className={"custom-text-gradient"} 
-          func={() => navigateToAnotherPage('/authPage')} 
-          style={{ fontSize: '1rem' }}
-        />
-        <BasicButton
-          pos={[150, 50]}
-          name={"test"}
-          className={"custom-text-gradient"} 
-          func={() => navigateToAnotherPage('/tests')} 
-          style={{ fontSize: '1rem' }}
-        />
-        <BasicButton
           pos={[50, 50]}
           name={"Try it out"}
           className={"custom-text-gradient"} 

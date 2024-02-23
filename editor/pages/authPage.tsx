@@ -1,5 +1,6 @@
 'client'
 
+//this page is experimental and not used in the current version of the app
 import { BasicButton, BorderMagicButton, TailWindConnectButton } from '@/app/components/ui/buttons';
 import { useEffect, useState } from "react";
 
@@ -19,8 +20,6 @@ export default function AuthPage() {
     const { user, session } = authState;
 
     useEffect(() => {
-        console.log('user', user);
-        console.log('session', session);
         if (user && session) {
             navigateToAnotherPage('/'); 
             // if the user is already authenticated, redirect to the index page

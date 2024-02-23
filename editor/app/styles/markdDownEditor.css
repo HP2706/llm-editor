@@ -340,7 +340,7 @@ body {
     border-top-right-radius: 10px;
     vertical-align: middle;
   }
-  
+
   .toolbar button.toolbar-item {
     border: 0;
     display: flex;
@@ -353,6 +353,13 @@ body {
   
   .toolbar button.toolbar-item:disabled {
     cursor: not-allowed;
+  }
+
+  .toolbar button.toolbar-item.text {
+    font-size: 14px; /* Smaller font size */
+    color:#777;
+    display: flex;
+    opacity: 0.6;
   }
   
   .toolbar button.toolbar-item.spaced {
@@ -749,4 +756,8 @@ body {
 
   i.ai-magic {
     background-image: url(../../public/images/icons/ai-magic.svg);
+  }
+
+  i.ai-color {
+    background-image: url(../../public/images/icons/ai-color.svg);
   }

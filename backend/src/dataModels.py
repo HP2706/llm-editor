@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator, model_validator
-from typing import Type, Optional, Tuple
-from typing_extensions import Self, Literal
+from typing import Type, Optional
+from typing_extensions import Self
 # for editor
 
 # internal models
@@ -41,20 +41,5 @@ def ModelEditFactory(textData: str) -> Type[BaseModel]:
         
     return Edit
 
-class Finished(BaseModel):
-    finished : Literal[True] = Field(..., description="""
-        Whether you are finished editing the document, this can only be true if the document has been fully edited.
-    """)
-
 # for getting logprobs
 
-class TokenProb(BaseModel):
-    token : str = Field(..., description="The token")
-    prob : float = Field(..., description="the probability of the token")
-    color : Optional[Tuple[float, float, float, float]] = Field(None, description="""
-        The color of the token, the more green the more likely the model finds the token to be.
-    """)
-
-class Word(BaseModel):
-    string : str = Field(..., description="The word")
-    pos : int = Field(..., description="The position of the word in sequence") 

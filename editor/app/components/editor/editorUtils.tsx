@@ -4,7 +4,7 @@ import { $createParagraphNode, $createRangeSelection, $createTextNode, $getNodeB
 import { ElementNode, LexicalNode } from 'lexical';
 import { html_to_docx, html_to_markdown, lexical_to_html } from '@/lib/lexicalConversion';
 
-import {ButtonTextNode} from '@/app/components/editor/plugins/AiEditPlugin';
+import {ButtonTextNode} from '@/app/components/editor/plugins/nodeExtensions';
 import { nodeContext } from '@/lib/types';
 import { saveAs } from 'file-saver';
 

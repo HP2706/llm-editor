@@ -37,21 +37,23 @@ yarn-error.log*
 next-env.d.ts
 
 #caching 
+__pycache__/
+*.py[cod]
+*$py.class
 *.db
 #python stuff
 *.pyc
 *.cpython-39.pyc
 *.swp
 *.TOML
-index.cpython-39.pyc
-*cpython-39.pyc
+*index.cpython-39.pyc
+*.cpython-39.pyc
 *.pyo
 *.pyd
-__pycache__/
+*__pycache__/
 *.cpython*
 *.DS_Store
 *.docx
 *.ipynb
 *.log
 *.md
-```
